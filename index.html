@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#2a2119">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="성과 길">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>성과 길</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<style>
+/* Layout: score chips on top, full-bleed board canvas, tile tray with buttons at the bottom. */
+:root{
+  --table:#2a2119;
+  --ink:#f3e9d2;
+  --muted:#b3a58b;
+  --surface:#3a2e22;
+  --surface-2:#4a3b2c;
+  --rule:#5c4a37;
+  --gold:#e3b75a;
+  --gold-ink:#2a1d07;
+  --danger:#d8574a;
+  --display:"Nanum Myeongjo","AppleMyungjo","Noto Serif KR",serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html{box-sizing:border-box;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--table)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{margin:0;height:100%;background:var(--table);color:var(--ink);font-family:var(--body);font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#app{height:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column}
+.gut{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+button{font-family:inherit;color:inherit;cursor:pointer}
+
+header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding-block:6px;display:flex;align-items:center;gap:6px;min-height:50px}
+#chips{display:flex;gap:4px;flex:1;min-width:0}
+.chip{flex:1;min-width:0;border-radius:9px;padding:4px 6px;background:var(--surface-2);border:2px solid transparent;display:flex;flex-direction:column;gap:1px;line-height:1.15}
+.chip.on{border-color:var(--gold)}
+.chip .nm{display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 1px #0006}
+.chip .sc{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.chip .sc b{font-size:16px}
+.chip .sc small{font-size:10px;color:var(--muted)}
+.iconbtn{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--rule);background:var(--surface-2);font-size:18px;display:grid;place-items:center}
+
+#wrap{position:relative;flex:1;min-height:0;overflow:hidden}
+#board{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#fit{position:absolute;right:10px;top:10px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:16px}
+#undo{position:absolute;right:10px;top:56px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:18px}
+#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#1c150fe6;border:1px solid var(--rule);border-radius:10px;padding:7px 12px;font-size:13px;max-width:80%;text-align:center;pointer-events:none;transition:opacity .3s}
+#toast.hide{opacity:0}
+
+footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-block:8px;display:flex;align-items:center;gap:10px;min-height:88px}
+#preview{width:84px;height:84px;flex:none;border-radius:6px;background:#1c150f}
+#info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#who{font-family:var(--display);font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hint{font-size:12px;color:var(--muted);line-height:1.3}
+#left{font-size:11px;color:var(--muted)}
+#btns{display:flex;flex-direction:column;gap:6px;flex:none}
+.btn{min-width:92px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--rule);background:var(--surface-2);font-size:14px}
+.btn.primary{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:700}
+.btn:disabled{opacity:.4}
+
+.overlay{position:fixed;inset:0;background:#120d09ee;z-index:20;overflow:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet{max-width:520px;margin:0 auto;padding:24px 16px 32px}
+.title{font-family:var(--display);font-weight:800;font-size:34px;margin:12px 0 2px;letter-spacing:.04em;text-align:center}
+.sub{color:var(--muted);text-align:center;margin:0 0 22px;font-size:13px}
+h2{font-family:var(--display);font-size:18px;margin:18px 0 10px}
+.seat{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:8px 10px;margin-bottom:8px}
+.seat .dot{width:16px;height:16px}
+.seat input{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;color:var(--ink);font:inherit;font-size:16px;padding:6px 8px}
+.seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;flex:none}
+.seg button{border:0;background:transparent;padding:7px 9px;font-size:13px}
+.seg button.on{background:var(--gold);color:var(--gold-ink);font-weight:700}
+.x{width:30px;height:30px;border-radius:8px;border:1px solid var(--rule);background:transparent;flex:none}
+.x:disabled{opacity:.3}
+.wide{display:block;width:100%;height:46px;margin-top:10px;font-size:16px}
+.note{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.5}
+.rules p,.rules li{line-height:1.6;font-size:14px}
+.rules ul{padding-left:18px}
+table.res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+table.res th,table.res td{padding:7px 4px;border-bottom:1px solid var(--rule);text-align:right}
+table.res th:first-child,table.res td:first-child{text-align:left}
+table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
+.menu-list button{display:block;width:100%;text-align:left;height:50px;margin-bottom:8px;padding:0 16px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);font-size:16px}
+.log{font-size:13px;line-height:1.7;color:var(--ink)}
+.log div{display:flex;gap:6px;align-items:center}
+.seat{flex-wrap:wrap}
+.seat .lv{flex-basis:100%;display:flex;align-items:center;gap:8px;padding-left:24px;font-size:12px;color:var(--muted)}
+.seg.small button{padding:5px 12px}
+.back{background:transparent;border:0;color:var(--muted);font-size:14px;padding:6px 0}
+.pref{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:8px 10px;margin-top:10px}
+
+/* 첫 화면 */
+#home .sheet{min-height:100%;display:flex;flex-direction:column;justify-content:center}
+#home .title{font-size:46px;margin-top:6px}
+#scene{display:block;width:100%;max-width:380px;aspect-ratio:4/3;margin:6px auto 4px;border-radius:14px;box-shadow:0 10px 30px #0008}
+#home .foot{color:var(--muted);text-align:center;font-size:12px;margin-top:16px}
+
+/* 남은 타일 */
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tgrid div{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-variant-numeric:tabular-nums}
+.tgrid img{width:100%;border-radius:6px;display:block}
+.tgrid .zero{opacity:.3}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top gut">
+    <div id="chips"></div>
+    <button class="iconbtn" id="menuBtn" aria-label="메뉴">≡</button>
+  </header>
+  <div id="wrap">
+    <canvas id="board"></canvas>
+    <button id="fit" aria-label="전체 보기">⤢</button>
+    <button id="undo" aria-label="한 수 무르기" hidden>↶</button>
+    <div id="toast" class="hide"></div>
+  </div>
+  <footer class="tray gut">
+    <canvas id="preview" width="144" height="144"></canvas>
+    <div id="info">
+      <div id="who"></div>
+      <div id="hint"></div>
+      <div id="left"></div>
+    </div>
+    <div id="btns">
+      <button class="btn" id="b1"></button>
+      <button class="btn primary" id="b2"></button>
+    </div>
+  </footer>
+</div>
+
+<div class="overlay" id="home" hidden>
+  <div class="sheet">
+    <div class="title">성과 길</div>
+    <p class="sub">타일을 이어 길과 성을 넓히는 보드게임</p>
+    <canvas id="scene" width="760" height="570"></canvas>
+    <button class="btn primary wide" id="resumeBtn" hidden>이어하기</button>
+    <button class="btn wide" id="homeNew">새 게임</button>
+    <button class="btn wide" id="rulesBtn0">규칙</button>
+    <p class="foot">기본판 타일 72장 · 2~5명 · 사람과 컴퓨터</p>
+  </div>
+</div>
+
+<div class="overlay" id="setup" hidden>
+  <div class="sheet">
+    <button class="back" id="setupBack">← 처음 화면</button>
+    <h2>함께 할 사람</h2>
+    <div id="seats"></div>
+    <button class="btn wide" id="addSeat">＋ 자리 추가</button>
+    <p class="note">2~5명. 컴퓨터는 4명까지. 사람이 여럿이면 휴대폰 하나를 돌려 가며 합니다.</p>
+    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    <button class="btn primary wide" id="startBtn">게임 시작</button>
+  </div>
+</div>
+
+<div class="overlay" id="menu" hidden>
+  <div class="sheet menu-list">
+    <h2>메뉴</h2>
+    <button id="mClose">게임으로 돌아가기</button>
+    <button id="mUndo">↶ 한 수 무르기</button>
+    <button id="mTiles">남은 타일 보기</button>
+    <button id="mLog">점수 기록</button>
+    <button id="mRules">규칙</button>
+    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    <div id="logBox" class="log" hidden></div>
+    <button id="mHome" style="margin-top:8px">처음 화면</button>
+  </div>
+</div>
+
+<div class="overlay" id="rules" hidden>
+  <div class="sheet rules">
+    <h2>규칙</h2>
+    <p>차례마다 타일 한 장을 뽑아 이미 놓인 타일 옆에 붙입니다. 맞닿는 변은 길은 길끼리, 성은 성끼리, 들판은 들판끼리 이어져야 합니다. 놓을 수 있는 칸은 판 위에 점선으로 보입니다.</p>
+    <ul>
+      <li>칸을 누르면 타일이 놓이고, 같은 칸을 다시 누르거나 <b>돌리기</b>를 누르면 맞는 방향으로 돌아갑니다. <b>놓기</b>로 확정합니다.</li>
+      <li>방금 놓은 타일의 길·성·수도원·들판에 일꾼을 올릴 수 있습니다. 이미 다른 일꾼이 있는 곳과 이어진 곳에는 올릴 수 없습니다.</li>
+      <li>일꾼은 한 사람당 7개. 길·성·수도원이 완성되면 점수를 받고 일꾼이 돌아옵니다. 들판의 일꾼은 끝까지 남습니다.</li>
+    </ul>
+    <h2>점수</h2>
+    <ul>
+      <li><b>길</b>: 완성하면 타일 1장당 1점</li>
+      <li><b>성</b>: 완성하면 타일 1장·방패 1개당 2점</li>
+      <li><b>수도원</b>: 둘레 8칸이 모두 차면 9점</li>
+      <li><b>게임 끝</b>: 미완성 길은 1장당 1점, 미완성 성은 타일·방패당 1점, 미완성 수도원은 채워진 칸 수만큼</li>
+      <li><b>들판</b>: 게임 끝에 그 들판에 닿은 완성된 성 하나당 3점</li>
+      <li>한 곳에 여러 사람의 일꾼이 있으면 가장 많이 올린 사람이 점수를 가집니다(같으면 모두).</li>
+    </ul>
+    <p>타일 72장이 모두 놓이면 게임이 끝납니다. 놓을 곳이 없는 타일은 버리고 다시 뽑습니다.</p>
+    <button class="btn primary wide" id="rulesClose">닫기</button>
+  </div>
+</div>
+
+<div class="overlay" id="tiles" hidden>
+  <div class="sheet">
+    <h2 id="tilesTitle">남은 타일</h2>
+    <p class="note" style="margin-top:-4px;margin-bottom:12px">지금 뽑은 타일은 빼고 센 숫자예요.</p>
+    <div class="tgrid" id="tgrid"></div>
+    <button class="btn primary wide" id="tilesClose">닫기</button>
+  </div>
+</div>
+
+<div class="overlay" id="result" hidden>
+  <div class="sheet">
+    <div class="title" id="resTitle">게임 끝</div>
+    <p class="sub" id="resSub"></p>
+    <table class="res" id="resTable"></table>
+    <p class="note">끝 점수: 미완성 길·성·수도원과 들판 점수입니다.</p>
+    <button class="btn wide" id="resBoard">판 보기</button>
+    <button class="btn primary wide" id="resNew">새 게임</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ───────── 타일 정의 ─────────
+// 변(side): 0 위, 1 오른쪽, 2 아래, 3 왼쪽.
+// 들판 포트(port): 각 변을 둘로 나눈 8칸, 왼쪽 위에서 시계 방향 — 0 위-왼, 1 위-오, 2 오-위, 3 오-아, 4 아-오, 5 아-왼, 6 왼-아, 7 왼-위.
+// 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
+const SAVE_KEY = 'tileroad-save-v1';
+const ALL8 = [0,1,2,3,4,5,6,7];
+const TILES = [
+  {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
+  {id:'B',n:4,f:[{t:'K',m:[.5,.47]},{t:'F',p:ALL8,m:[.18,.2]}]},
+  {id:'C',n:1,f:[{t:'C',s:[0,1,2,3],sh:1,m:[.5,.5],sp:[.24,.24]}]},
+  {id:'D',n:4,f:[{t:'C',s:[0],m:[.5,.13]},{t:'R',s:[1,3],m:[.3,.5]},{t:'F',p:[2,7],a:[0],m:[.8,.37]},{t:'F',p:[3,4,5,6],m:[.5,.8]}]},
+  {id:'E',n:5,f:[{t:'C',s:[0],m:[.5,.13]},{t:'F',p:[2,3,4,5,6,7],a:[0],m:[.5,.66]}]},
+  {id:'F',n:2,f:[{t:'C',s:[1,3],sh:1,m:[.5,.5],sp:[.2,.5]},{t:'F',p:[0,1],a:[0],m:[.5,.1]},{t:'F',p:[4,5],a:[0],m:[.5,.9]}]},
+  {id:'G',n:1,f:[{t:'C',s:[1,3],m:[.5,.5]},{t:'F',p:[0,1],a:[0],m:[.5,.1]},{t:'F',p:[4,5],a:[0],m:[.5,.9]}]},
+  {id:'H',n:3,f:[{t:'C',s:[1],m:[.87,.5]},{t:'C',s:[3],m:[.13,.5]},{t:'F',p:[0,1,4,5],a:[0,1],m:[.5,.5]}]},
+  {id:'I',n:2,f:[{t:'C',s:[0],m:[.5,.13]},{t:'C',s:[3],m:[.13,.55]},{t:'F',p:[2,3,4,5],a:[0,1],m:[.65,.65]}]},
+  {id:'J',n:3,f:[{t:'C',s:[0],m:[.5,.13]},{t:'R',s:[1,2],m:[.65,.65]},{t:'F',p:[3,4],m:[.88,.88]},{t:'F',p:[2,5,6,7],a:[0],m:[.3,.56]}]},
+  {id:'K',n:3,f:[{t:'C',s:[0],m:[.5,.13]},{t:'R',s:[2,3],m:[.35,.65]},{t:'F',p:[5,6],m:[.12,.88]},{t:'F',p:[2,3,4,7],a:[0],m:[.7,.56]}]},
+  {id:'L',n:3,f:[{t:'C',s:[0],m:[.5,.13]},{t:'R',s:[1],m:[.82,.5]},{t:'R',s:[2],m:[.5,.82]},{t:'R',s:[3],m:[.18,.5]},{t:'F',p:[2,7],a:[0],m:[.28,.37]},{t:'F',p:[3,4],m:[.78,.78]},{t:'F',p:[5,6],m:[.22,.78]}]},
+  {id:'M',n:2,f:[{t:'C',s:[0,3],sh:1,m:[.3,.3],sp:[.13,.13]},{t:'F',p:[2,3,4,5],a:[0],m:[.72,.72]}]},
+  {id:'N',n:3,f:[{t:'C',s:[0,3],m:[.3,.3]},{t:'F',p:[2,3,4,5],a:[0],m:[.72,.72]}]},
+  {id:'O',n:2,f:[{t:'C',s:[0,3],sh:1,m:[.28,.28],sp:[.12,.12]},{t:'R',s:[1,2],m:[.66,.66]},{t:'F',p:[3,4],m:[.89,.89]},{t:'F',p:[2,5],a:[0],m:[.87,.37]}]},
+  {id:'P',n:3,f:[{t:'C',s:[0,3],m:[.28,.28]},{t:'R',s:[1,2],m:[.66,.66]},{t:'F',p:[3,4],m:[.89,.89]},{t:'F',p:[2,5],a:[0],m:[.87,.37]}]},
+  {id:'Q',n:1,f:[{t:'C',s:[0,1,3],sh:1,m:[.5,.38],sp:[.2,.2]},{t:'F',p:[4,5],a:[0],m:[.5,.89]}]},
+  {id:'R',n:3,f:[{t:'C',s:[0,1,3],m:[.5,.38]},{t:'F',p:[4,5],a:[0],m:[.5,.89]}]},
+  {id:'S',n:2,f:[{t:'C',s:[0,1,3],sh:1,m:[.5,.35],sp:[.2,.2]},{t:'R',s:[2],m:[.5,.88]},{t:'F',p:[4],a:[0],m:[.82,.93]},{t:'F',p:[5],a:[0],m:[.18,.93]}]},
+  {id:'T',n:1,f:[{t:'C',s:[0,1,3],m:[.5,.35]},{t:'R',s:[2],m:[.5,.88]},{t:'F',p:[4],a:[0],m:[.82,.93]},{t:'F',p:[5],a:[0],m:[.18,.93]}]},
+  {id:'U',n:8,f:[{t:'R',s:[0,2],m:[.5,.5]},{t:'F',p:[1,2,3,4],m:[.78,.5]},{t:'F',p:[5,6,7,0],m:[.22,.5]}]},
+  {id:'V',n:9,f:[{t:'R',s:[2,3],m:[.35,.65]},{t:'F',p:[5,6],m:[.12,.88]},{t:'F',p:[0,1,2,3,4,7],m:[.68,.32]}]},
+  {id:'W',n:4,f:[{t:'R',s:[1],m:[.82,.5]},{t:'R',s:[2],m:[.5,.82]},{t:'R',s:[3],m:[.18,.5]},{t:'F',p:[0,1,2,7],m:[.5,.22]},{t:'F',p:[3,4],m:[.78,.78]},{t:'F',p:[5,6],m:[.22,.78]}]},
+  {id:'X',n:1,f:[{t:'R',s:[0],m:[.5,.18]},{t:'R',s:[1],m:[.82,.5]},{t:'R',s:[2],m:[.5,.82]},{t:'R',s:[3],m:[.18,.5]},{t:'F',p:[0,7],m:[.2,.2]},{t:'F',p:[1,2],m:[.8,.2]},{t:'F',p:[3,4],m:[.8,.8]},{t:'F',p:[5,6],m:[.2,.8]}]},
+];
+const START_TILE = 3; // D: 성 + 곧은 길
+const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
+const KIND = {C:'성',R:'길',K:'수도원',F:'들판'};
+const COLORS = [
+  {n:'빨강',c:'#d8463c'},{n:'파랑',c:'#3b7ad6'},{n:'노랑',c:'#e9c23b'},{n:'보라',c:'#9a62d4'},{n:'검정',c:'#2b2b2b'},
+];
+
+// 회전한 타일 정보(캐시)
+const ROT = TILES.map((tile) => [0,1,2,3].map(r => {
+  const feats = tile.f.map(f => ({
+    t:f.t, s:(f.s||[]).map(s => (s+r)%4), p:(f.p||[]).map(p => (p+2*r)%8),
+    a:f.a||[], sh:f.sh||0, m:rotPt(f.m, r),
+  }));
+  const edges = ['F','F','F','F'], sideFeat = [-1,-1,-1,-1], portFeat = Array(8).fill(-1);
+  feats.forEach((f,i) => { f.s.forEach(s => { edges[s] = f.t; sideFeat[s] = i; }); f.p.forEach(p => { portFeat[p] = i; }); });
+  return {feats, edges, sideFeat, portFeat};
+}));
+function rotPt([x,y], r){ for (let i = 0; i < r; i++) [x,y] = [1-y, x]; return [x,y]; }
+const rotOf = c => ROT[c.t][c.r];
+const key = (x,y) => x + ',' + y;
+const portPartner = p => ((p>>1) % 2 === 0) ? 5-p : 9-p;
+
+// ───────── 게임 상태 ─────────
+let G = null;            // {players, board(Map), deck, cur, tile, phase, last, log, turnNo}
+let cands = new Map();   // 놓을 수 있는 칸 → 가능한 회전들
+let pending = null;      // {x,y,r}
+let rotView = 0;
+let meepleSel = null;    // 고른 특징 번호
+let spots = [];          // 일꾼 올릴 수 있는 자리
+let busy = false;
+
+function newGame(seats){
+  const deck = [];
+  TILES.forEach((t,i) => { const n = i === START_TILE ? t.n-1 : t.n; for (let k = 0; k < n; k++) deck.push(i); });
+  for (let i = deck.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [deck[i],deck[j]] = [deck[j],deck[i]]; }
+  G = {
+    players: seats.map(s => ({name:s.name, color:s.color, ai:s.ai, level:s.level || 'hard', score:0, meeples:7, end:null})),
+    board: new Map([[key(0,0), {t:START_TILE, r:0, m:null}]]),
+    deck, cur:0, tile:null, phase:'place', last:null, log:[], turnNo:0,
+  };
+  fitView(false);
+  startTurn();
+}
+
+function fits(x,y,t,r){
+  if (G.board.has(key(x,y))) return false;
+  const ri = ROT[t][r]; let n = 0;
+  for (let s = 0; s < 4; s++){
+    const nb = G.board.get(key(x+DIRS[s][0], y+DIRS[s][1]));
+    if (!nb) continue;
+    n++;
+    if (rotOf(nb).edges[(s+2)%4] !== ri.edges[s]) return false;
+  }
+  return n > 0;
+}
+function candidatesFor(t){
+  const out = new Map(), seen = new Set();
+  for (const k of G.board.keys()){
+    const [x,y] = k.split(',').map(Number);
+    for (const [dx,dy] of DIRS){
+      const nk = key(x+dx,y+dy);
+      if (seen.has(nk) || G.board.has(nk)) continue;
+      seen.add(nk);
+      const rs = [0,1,2,3].filter(r => fits(x+dx,y+dy,t,r));
+      if (rs.length) out.set(nk, rs);
+    }
+  }
+  return out;
+}
+
+// 이어진 영역 찾기(성·길·들판)
+function region(x,y,fi){
+  const startCell = G.board.get(key(x,y));
+  const type = rotOf(startCell).feats[fi].t;
+  const seen = new Set(), tiles = new Set(), meeples = [], cityNodes = [], openCells = new Set();
+  let open = 0, sh = 0, id = null;
+  const stack = [[x,y,fi]];
+  while (stack.length){
+    const [cx,cy,cf] = stack.pop();
+    const nk = cx+','+cy+','+cf;
+    if (seen.has(nk)) continue;
+    seen.add(nk);
+    if (id === null || nk < id) id = nk;
+    const cell = G.board.get(key(cx,cy)), f = rotOf(cell).feats[cf];
+    tiles.add(key(cx,cy));
+    sh += f.sh;
+    if (cell.m && cell.m.f === cf) meeples.push({p:cell.m.p, x:cx, y:cy});
+    if (type === 'F'){
+      f.a.forEach(a => cityNodes.push([cx,cy,a]));
+      for (const p of f.p){
+        const s = p>>1, nx = cx+DIRS[s][0], ny = cy+DIRS[s][1];
+        const nb = G.board.get(key(nx,ny));
+        if (nb) stack.push([nx,ny,rotOf(nb).portFeat[portPartner(p)]]);
+        else openCells.add(key(nx,ny));
+      }
+    } else {
+      for (const s of f.s){
+        const nx = cx+DIRS[s][0], ny = cy+DIRS[s][1];
+        const nb = G.board.get(key(nx,ny));
+        if (nb) stack.push([nx,ny,rotOf(nb).sideFeat[(s+2)%4]]);
+        else { open++; openCells.add(key(nx,ny)); }
+      }
+    }
+  }
+  return {type, id, tiles:tiles.size, tileKeys:[...tiles], sh, meeples, open, openCells, complete:open === 0, cityNodes, at:[x,y]};
+}
+function cloisterCount(x,y){
+  let n = 0;
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (G.board.has(key(x+dx,y+dy))) n++;
+  return n;
+}
+function owners(meeples){
+  const cnt = {};
+  meeples.forEach(m => cnt[m.p] = (cnt[m.p]||0)+1);
+  const max = Math.max(0, ...Object.values(cnt));
+  return max ? Object.keys(cnt).filter(p => cnt[p] === max).map(Number) : [];
+}
+function regionPoints(reg, endGame){
+  if (reg.type === 'R') return reg.tiles;
+  if (reg.type === 'C') return (reg.tiles + reg.sh) * (reg.complete && !endGame ? 2 : 1);
+  return 0;
+}
+// 들판에 닿은 성: 완성/미완성 개수
+function fieldCities(reg){
+  const ids = new Map();
+  for (const [x,y,a] of reg.cityNodes){
+    const cr = region(x,y,a);
+    ids.set(cr.id, cr.complete);
+  }
+  let complete = 0, incomplete = 0;
+  ids.forEach(c => c ? complete++ : incomplete++);
+  return {complete, incomplete};
+}
+
+// 놓은 타일 때문에 완성된 곳 점수 매기기
+function scoreCompleted(x,y){
+  const events = [];
+  const cell = G.board.get(key(x,y)), ri = rotOf(cell);
+  ri.feats.forEach((f,fi) => {
+    if (f.t !== 'C' && f.t !== 'R') return;
+    const reg = region(x,y,fi);
+    if (!reg.complete || !reg.meeples.length) return;
+    const pts = regionPoints(reg, false);
+    owners(reg.meeples).forEach(p => { G.players[p].score += pts; events.push({p, pts, kind:f.t, at:[x,y], keys:reg.tileKeys}); });
+    returnMeeples(reg.meeples);
+  });
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++){
+    const c = G.board.get(key(x+dx,y+dy));
+    if (!c || !c.m || rotOf(c).feats[c.m.f].t !== 'K') continue;
+    if (cloisterCount(x+dx,y+dy) === 9){
+      G.players[c.m.p].score += 9;
+      const keys = [];
+      for (let ex = -1; ex <= 1; ex++) for (let ey = -1; ey <= 1; ey++) keys.push(key(x+dx+ex, y+dy+ey));
+      events.push({p:c.m.p, pts:9, kind:'K', at:[x+dx,y+dy], keys});
+      returnMeeples([{p:c.m.p, x:x+dx, y:y+dy}]);
+    }
+  }
+  return events;
+}
+function returnMeeples(list){
+  list.forEach(m => { const c = G.board.get(key(m.x,m.y)); if (c.m){ c.m = null; G.players[m.p].meeples++; } });
+}
+
+function endScoring(){
+  const done = new Set();
+  const bd = G.players.map(() => ({R:0, C:0, K:0, F:0}));
+  for (const [k,c] of G.board){
+    if (!c.m) continue;
+    const [x,y] = k.split(',').map(Number), f = rotOf(c).feats[c.m.f];
+    if (f.t === 'K'){ bd[c.m.p].K += cloisterCount(x,y); continue; }
+    const reg = region(x,y,c.m.f);
+    if (done.has(reg.id)) continue;
+    done.add(reg.id);
+    const own = owners(reg.meeples);
+    if (f.t === 'F'){ const fc = fieldCities(reg); own.forEach(p => bd[p].F += fc.complete*3); }
+    else own.forEach(p => bd[p][f.t] += regionPoints(reg, true));
+  }
+  G.players.forEach((p,i) => { p.end = bd[i]; p.score += bd[i].R + bd[i].C + bd[i].K + bd[i].F; });
+}
+
+// ───────── 차례 진행 ─────────
+function startTurn(){
+  pending = null; meepleSel = null; spots = [];
+  let discarded = 0;
+  while (G.deck.length){
+    const t = G.deck.pop();
+    const c = candidatesFor(t);
+    if (c.size){ G.tile = t; cands = c; break; }
+    discarded++;
+  }
+  if (discarded) toast(`놓을 곳이 없는 타일 ${discarded}장을 버렸어요`);
+  if (G.tile === null || !cands.size){ finishGame(); return; }
+  G.phase = 'place';
+  rotView = 0;
+  if (undoAllowed() && !G.players[G.cur].ai){
+    const snap = JSON.stringify(snapshot());
+    if (!G.undoCur || JSON.parse(G.undoCur).turnNo !== G.turnNo){ G.undoPrev = G.undoCur || null; G.undoCur = snap; }
+  }
+  enterTurn();
+}
+function enterTurn(){
+  save();
+  updateUI();
+  draw();
+  if (G.players[G.cur].ai) runAI();
+}
+// 무르기: 사람이 한 명이고 나머지가 모두 컴퓨터일 때만
+function undoAllowed(){ return G.players.filter(p => !p.ai).length === 1 && G.players.length > 1; }
+function canUndo(){ return G && G.undoPrev && G.phase !== 'over' && !busy && !G.players[G.cur].ai && undoAllowed(); }
+function undo(){
+  if (!canUndo()) return;
+  const d = fromSnapshot(JSON.parse(G.undoPrev));
+  d.undoCur = G.undoPrev; d.undoPrev = null;
+  G = d;
+  pending = null; meepleSel = null; spots = []; anims = []; flashes = [];
+  cands = candidatesFor(G.tile);
+  G.phase = 'place'; rotView = 0;
+  toast('바로 전 내 차례로 되돌렸어요');
+  enterTurn();
+}
+
+function confirmPlace(){
+  if (!pending) return;
+  G.board.set(key(pending.x,pending.y), {t:G.tile, r:pending.r, m:null});
+  G.last = {x:pending.x, y:pending.y, p:G.cur};
+  cands = new Map();
+  G.phase = 'meeple';
+  computeSpots();
+  if (!spots.length){ finishTurn(null); return; }
+  updateUI(); draw();
+}
+function computeSpots(){
+  spots = [];
+  if (G.players[G.cur].meeples <= 0) return;
+  const {x,y} = G.last, cell = G.board.get(key(x,y));
+  rotOf(cell).feats.forEach((f,fi) => {
+    if (f.t === 'K' || !region(x,y,fi).meeples.length) spots.push({fi, m:f.m, t:f.t});
+  });
+}
+function backToPlace(){
+  const {x,y} = G.last;
+  pending = {x, y, r:G.board.get(key(x,y)).r};
+  G.board.delete(key(x,y));
+  G.last = null; meepleSel = null; spots = [];
+  cands = candidatesFor(G.tile);
+  G.phase = 'place';
+  updateUI(); draw();
+}
+function finishTurn(fi){
+  const {x,y} = G.last, p = G.players[G.cur];
+  if (fi !== null && fi !== undefined && p.meeples > 0){
+    G.board.get(key(x,y)).m = {p:G.cur, f:fi};
+    p.meeples--;
+  }
+  const events = scoreCompleted(x,y);
+  events.forEach(e => {
+    G.log.push({p:e.p, pts:e.pts, kind:e.kind, turn:G.turnNo});
+    floatText(e.at, '+' + e.pts, G.players[e.p].color);
+    flashRegion(e.keys, G.players[e.p].color);
+  });
+  if (events.length) toast(events.map(e => `${G.players[e.p].name} ${KIND[e.kind]} +${e.pts}`).join(' · '));
+  G.tile = null; pending = null; meepleSel = null; spots = [];
+  G.turnNo++;
+  G.cur = (G.cur + 1) % G.players.length;
+  if (!G.deck.length){ finishGame(); return; }
+  startTurn();
+}
+function finishGame(){
+  if (G.phase !== 'over'){
+    endScoring();
+    G.phase = 'over';
+    G.tile = null; cands = new Map();
+  }
+  save(); updateUI(); draw();
+  showResult();
+}
+
+// ───────── 컴퓨터 ─────────
+// 하·중: 지금 놓는 타일 주변만 보는 간단한 점수식. noise가 크면(하) 엉뚱한 수를 자주 둔다.
+function aiChoose(noise){
+  const pi = G.cur, me = G.players[pi], t = G.tile;
+  const late = G.deck.length < 12;
+  const cost = me.meeples > 0 ? 1.2 + (7-me.meeples)*0.35 + (me.meeples === 1 ? 2 : 0) : Infinity;
+  let best = null;
+  for (const [k, rs] of cands){
+    const [x,y] = k.split(',').map(Number);
+    for (const r of rs){
+      G.board.set(k, {t, r, m:null});
+      const ri = ROT[t][r];
+      let base = 0;
+      const opts = [{fi:null, v:0}], seen = new Set();
+      ri.feats.forEach((f,fi) => {
+        if (f.t === 'K'){
+          const n = cloisterCount(x,y);
+          opts.push({fi, v: n + (9-n)*(late ? 0.2 : 0.6) - cost});
+          return;
+        }
+        const reg = region(x,y,fi);
+        if (seen.has(reg.id)) return;
+        seen.add(reg.id);
+        if (f.t === 'F'){
+          if (!reg.meeples.length){
+            const fc = fieldCities(reg);
+            const v = fc.complete*3 + fc.incomplete*(late ? 0.6 : 1.4) - cost - 2.5;
+            opts.push({fi, v});
+          }
+          return;
+        }
+        const pts = regionPoints(reg, false);
+        if (reg.meeples.length){
+          const own = owners(reg.meeples);
+          if (reg.complete){
+            own.forEach(o => base += o === pi ? pts + 1.5 : -pts*0.5);
+          } else {
+            const grow = f.t === 'C' ? 2 + f.sh*2 : 1;
+            base += own.includes(pi) ? grow*0.7 : -grow*0.3*own.length;
+          }
+        } else {
+          if (reg.complete) opts.push({fi, v: pts + 1.5});
+          else {
+            const pot = f.t === 'C' ? (reg.tiles+reg.sh)*(late ? 1 : 1.5) - reg.open*0.3 + 1 : reg.tiles*0.9 + 0.5 - (late ? 0.5 : 0);
+            opts.push({fi, v: pot - cost});
+          }
+        }
+      });
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++){
+        if (!dx && !dy) continue;
+        const c = G.board.get(key(x+dx,y+dy));
+        if (c && c.m && rotOf(c).feats[c.m.f].t === 'K') base += c.m.p === pi ? 1 : -0.6;
+      }
+      G.board.delete(k);
+      const bo = (me.meeples > 0 ? opts : opts.slice(0,1)).reduce((a,b) => b.v > a.v ? b : a);
+      const v = base + bo.v + Math.random()*noise;
+      if (!best || v > best.v) best = {x, y, r, fi:bo.fi, v};
+    }
+  }
+  return best;
+}
+// 상: 놓을 수 있는 모든 수를 실제로 두어 본 뒤(점수 계산까지) 판 전체를 평가한다.
+// 평가(posValue)는 남은 타일 수로 계산한 완성 가능성 등 특징에 학습한 가중치(AIW)를 곱해 "앞으로 얻을 점수"를 예상한 것.
+// 내 예상 점수 − 상대 예상 점수가 가장 큰 수를 고른다. 막기·끼어들기도 이 평가로 자연스럽게 나온다.
+// reply=true면 좋은 수 몇 개를 골라 다음 사람의 받아치기까지 살펴본다(느리고, 시험해 보니 더 세지지 않아 꺼 둠).
+const AIP = {opp:1, reply:false, topK:6, samples:8};
+const relValue = (V, pi) => {
+  const others = V.filter((_,i) => i !== pi);
+  return V[pi] - AIP.opp*(Math.max(...others)*0.6 + others.reduce((a,b) => a+b, 0)/others.length*0.4);
+};
+function aiHard(){
+  const pi = G.cur, me = G.players[pi], t = G.tile;
+  const counts = Array(TILES.length).fill(0);
+  G.deck.forEach(d => counts[d]++);
+  const ctx = {counts, D:G.deck.length, nP:G.players.length};
+  // 1단계: 모든 수를 한 수 앞까지 평가
+  const moves = [];
+  for (const [k, rs] of cands){
+    const [x,y] = k.split(',').map(Number);
+    for (const r of rs){
+      G.board.set(k, {t, r, m:null});
+      const opts = [null];
+      if (me.meeples > 0) ROT[t][r].feats.forEach((f,fi) => { if (f.t === 'K' || !region(x,y,fi).meeples.length) opts.push(fi); });
+      G.board.delete(k);
+      for (const fi of opts){
+        const undoMv = applyMove(x, y, t, r, fi, pi);
+        moves.push({x, y, r, fi, v: relValue(posValue(ctx), pi) + Math.random()*0.05});
+        undoMv();
+      }
+    }
+  }
+  moves.sort((a,b) => b.v - a.v);
+  if (!AIP.reply || G.deck.length < 2) return moves[0];
+  // 2단계: 좋은 수 몇 개만, 다음 사람이 남은 타일 중 하나를 뽑아 가장 좋게 받아치는 경우를 여러 번 해 보고 평균
+  const opp = (pi + 1) % G.players.length, K = Math.min(AIP.topK, moves.length), S = AIP.samples;
+  const saveCands = cands, saveTile = G.tile, saveCur = G.cur;
+  let best = null;
+  for (let i = 0; i < K; i++){
+    const mv = moves[i];
+    const undoMv = applyMove(mv.x, mv.y, t, mv.r, mv.fi, pi);
+    let sum = 0, n = 0;
+    for (let sIx = 0; sIx < S; sIx++){
+      const t2 = G.deck[Math.floor(Math.random() * G.deck.length)]; // 남은 타일 중 무작위(순서는 모름)
+      const c2 = candidatesFor(t2);
+      if (!c2.size) continue;
+      cands = c2; G.tile = t2; G.cur = opp;
+      const rep = aiChoose(0);
+      const undoRep = applyMove(rep.x, rep.y, t2, rep.r, rep.fi, opp);
+      ctx.counts[t2]--; ctx.D--;
+      sum += relValue(posValue(ctx), pi); n++;
+      ctx.counts[t2]++; ctx.D++;
+      undoRep();
+    }
+    cands = saveCands; G.tile = saveTile; G.cur = saveCur;
+    undoMv();
+    const v = n ? sum/n : mv.v;
+    if (!best || v > best.v) best = {...mv, v};
+  }
+  return best;
+}
+// 수를 실제로 두고(점수 계산까지) 되돌리는 함수를 돌려준다
+function applyMove(x, y, t, r, fi, pl){
+  const k = key(x,y), snapM = [], snapP = G.players.map(p => [p.score, p.meeples]);
+  for (const c of G.board.values()) if (c.m) snapM.push([c, c.m]);
+  const cell = {t, r, m:null};
+  G.board.set(k, cell);
+  if (fi !== null && G.players[pl].meeples > 0){ cell.m = {p:pl, f:fi}; G.players[pl].meeples--; }
+  scoreCompleted(x,y);
+  return () => {
+    G.board.delete(k);
+    snapM.forEach(([c,m]) => c.m = m);
+    G.players.forEach((p,i) => { p.score = snapP[i][0]; p.meeples = snapP[i][1]; });
+  };
+}
+// 판 상태를 사람마다 숫자 묶음(특징)으로 바꾼다. 가중치 AIW는 컴퓨터끼리 둔 판들에서
+// "이 상태에서 앞으로 몇 점을 더 얻었나"를 맞추도록 구했다(최소제곱).
+const NF = 17;
+function posFeatures(ctx){
+  const {counts, D, nP} = ctx;
+  const fillMemo = new Map(), pMemo = new Map(), seen = new Set();
+  const F = G.players.map(() => Array(NF).fill(0));
+  const myDraws = Math.max(0, D/nP);
+  const fillable = k => {
+    if (fillMemo.has(k)) return fillMemo.get(k);
+    const [x,y] = k.split(',').map(Number);
+    let n = 0;
+    for (let t = 0; t < TILES.length; t++) if (counts[t] && (fits(x,y,t,0) || fits(x,y,t,1) || fits(x,y,t,2) || fits(x,y,t,3))) n += counts[t];
+    fillMemo.set(k, n);
+    return n;
+  };
+  const cellChance = (k, draws) => {
+    const n = fillable(k);
+    if (!n || !D) return 0;
+    return Math.min(.96, 1 - Math.pow(1 - n/D, draws));
+  };
+  const pComplete = reg => {
+    if (reg.complete) return 1;
+    if (pMemo.has(reg.id)) return pMemo.get(reg.id);
+    let p = 1;
+    for (const k of reg.openCells){ p *= cellChance(k, Math.max(1, myDraws*1.3)) * (reg.type === 'C' ? .86 : .92); if (!p) break; }
+    pMemo.set(reg.id, p);
+    return p;
+  };
+  for (const [k,c] of G.board){
+    if (!c.m) continue;
+    const [x,y] = k.split(',').map(Number), f = rotOf(c).feats[c.m.f];
+    if (f.t === 'K'){
+      let add = 0;
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++){
+        const nk = key(x+dx,y+dy);
+        if (!G.board.has(nk)) add += cellChance(nk, Math.max(1, D*0.45));
+      }
+      F[c.m.p][5] += cloisterCount(x,y);
+      F[c.m.p][6] += add;
+      F[c.m.p][16] += Math.max(0, cloisterCount(x,y) + add - 7) / 2;
+      continue;
+    }
+    const reg = region(x,y,c.m.f);
+    if (seen.has(reg.id)) continue;
+    seen.add(reg.id);
+    const own = owners(reg.meeples);
+    let p = 0;
+    if (f.t === 'C'){
+      p = pComplete(reg);
+      own.forEach(o => { F[o][0] += reg.tiles + reg.sh; F[o][1] += (reg.tiles + reg.sh)*p; F[o][2] += reg.openCells.size*p; });
+    } else if (f.t === 'R'){
+      p = pComplete(reg);
+      let grow = 0;
+      for (const ok of reg.openCells) grow += cellChance(ok, Math.max(1, myDraws));
+      own.forEach(o => { F[o][3] += reg.tiles; F[o][4] += grow; });
+    } else {
+      let done = 0, maybe = 0;
+      const cities = new Set();
+      for (const [cx,cy,a] of reg.cityNodes){
+        const cr = region(cx,cy,a);
+        if (cities.has(cr.id)) continue;
+        cities.add(cr.id);
+        if (cr.complete) done++; else maybe += pComplete(cr);
+      }
+      own.forEach(o => { F[o][7] += 3*done; F[o][8] += 3*maybe; F[o][9] += reg.openCells.size; });
+    }
+    if (f.t !== 'F') reg.meeples.forEach(m => F[m.p][16] += p);
+  }
+  G.players.forEach((pl,i) => {
+    const n = pl.meeples;
+    F[i][10] = n >= 1 ? 1 : 0; F[i][11] = n >= 2 ? 1 : 0; F[i][12] = n >= 3 ? 1 : 0; F[i][13] = n >= 4 ? 1 : 0;
+    F[i][14] = n; F[i][15] = 0;
+  });
+  return F;
+}
+// 특징 → 앞으로 더 얻을 점수 예상. 각 특징은 그대로 한 번, 남은 판 비율(τ)을 곱해 한 번 더 들어간다.
+function featVec(f, tau){ const v = [1, tau]; for (const x of f) v.push(x, x*tau); return v; }
+// 2인 중-중 대결 400판으로 학습(2026-10-26). 이 가중치로 상이 중을 약 85% 이김.
+const AIW = [0.7514,61.4401,1.0049,-0.4039,0.4004,2.1562,-2.177,2.5244,0.9131,0.6999,-1.8302,2.5985,0.8081,0.1754,-0.5486,1.5924,0.9643,-1.0128,0.4755,0.0972,-0.0036,0.7198,-0.5123,11.5265,-1.6442,4.468,-0.9254,0.5931,-1.0462,0.6077,2.3949,2.1622,0,0,3.2227,-0.5665];
+function posValue(ctx){
+  const F = posFeatures(ctx), tau = ctx.D / 71;
+  return G.players.map((p,i) => {
+    if (!AIW) return p.score;
+    const v = featVec(F[i], tau);
+    let s = p.score;
+    for (let j = 0; j < v.length; j++) s += AIW[j]*v[j];
+    return s;
+  });
+}
+function runAI(){
+  busy = true;
+  updateUI();
+  const fast = prefs.speed === 'fast';
+  setTimeout(() => {
+    const lv = G.players[G.cur].level;
+    const mv = lv === 'hard' ? aiHard() : aiChoose(lv === 'easy' ? 7 : 0.3);
+    pending = {x:mv.x, y:mv.y, r:mv.r};
+    ensureVisible(mv.x, mv.y);
+    draw();
+    setTimeout(() => {
+      G.board.set(key(mv.x,mv.y), {t:G.tile, r:mv.r, m:null});
+      G.last = {x:mv.x, y:mv.y, p:G.cur};
+      cands = new Map(); pending = null;
+      busy = false;
+      finishTurn(mv.fi);
+    }, fast ? 250 : 750);
+  }, fast ? 60 : 400);
+}
+
+// ───────── 저장 ─────────
+function snapshot(){
+  return {
+    v:1, players:G.players, deck:G.deck, cur:G.cur, tile:G.tile, phase:G.phase, last:G.last, log:G.log, turnNo:G.turnNo,
+    board:[...G.board].map(([k,c]) => [k, c.t, c.r, c.m ? c.m.p : -1, c.m ? c.m.f : -1]),
+  };
+}
+function fromSnapshot(d){
+  d.board = new Map(d.board.map(([k,t,r,p,f]) => [k, {t, r, m: p >= 0 ? {p, f} : null}]));
+  d.players.forEach(p => { if (!p.level) p.level = 'mid'; });
+  return d;
+}
+function save(){
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({...snapshot(), undoCur:G.undoCur || null, undoPrev:G.undoPrev || null})); } catch(e){}
+}
+function loadSave(){
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (!d || d.v !== 1) return null;
+    return fromSnapshot(d);
+  } catch(e){ return null; }
+}
+function resume(d){
+  G = d;
+  fitView(false);
+  if (G.phase === 'over'){ updateUI(); draw(); showResult(); return; }
+  // 차례 시작 때 저장하므로, 뽑아 둔 타일을 다시 덱 위에 올리고 그 차례부터 다시 한다
+  if (G.tile !== null) G.deck.push(G.tile);
+  G.tile = null;
+  startTurn();
+}
+
+// ───────── 타일 그림 ─────────
+const COL = {
+  field:'#86b25c', grass:'#6f9b49', city:'#d9ae6a', cityDark:'#c2934f', wall:'#6e4523',
+  road:'#f0e6cb', roadEdge:'#6b5638', roof:'#b8452f', abbey:'#efe3c4', shield:'#2f5bab',
+};
+function withRot(c, k, fn){ c.save(); c.translate(.5,.5); c.rotate(k*Math.PI/2); c.translate(-.5,-.5); fn(); c.restore(); }
+function adjStart(ss){ for (const a of ss) if (ss.includes((a+1)%4)) return a; return 0; }
+function cityShape(c, ss){
+  // 모양(path)과 성벽선(wall) — 기본 방향에서 그린 뒤 회전
+  const n = ss.length;
+  const fillWall = (fill, wall) => {
+    c.beginPath(); fill(); c.fillStyle = COL.city; c.fill();
+    c.save(); c.clip(); c.lineWidth = .09; c.strokeStyle = COL.cityDark; c.beginPath(); wall(); c.stroke(); c.restore();
+    c.beginPath(); wall(); c.lineWidth = .035; c.strokeStyle = COL.wall; c.stroke();
+  };
+  if (n === 4){ c.fillStyle = COL.city; c.fillRect(0,0,1,1); return; }
+  if (n === 1){
+    withRot(c, ss[0], () => fillWall(
+      () => { c.moveTo(0,0); c.lineTo(1,0); c.quadraticCurveTo(.5,.6,0,0); },
+      () => { c.moveTo(1,0); c.quadraticCurveTo(.5,.6,0,0); }));
+    return;
+  }
+  if (n === 2 && (ss[0]+2)%4 === ss[1]){
+    withRot(c, ss.includes(1) ? 0 : 1, () => fillWall(
+      () => { c.moveTo(0,0); c.quadraticCurveTo(.5,.5,1,0); c.lineTo(1,1); c.quadraticCurveTo(.5,.5,0,1); c.closePath(); },
+      () => { c.moveTo(0,0); c.quadraticCurveTo(.5,.5,1,0); c.moveTo(1,1); c.quadraticCurveTo(.5,.5,0,1); }));
+    return;
+  }
+  if (n === 2){
+    withRot(c, adjStart(ss), () => fillWall(
+      () => { c.moveTo(0,0); c.lineTo(1,0); c.lineTo(1,1); c.quadraticCurveTo(.4,.6,0,0); },
+      () => { c.moveTo(1,1); c.quadraticCurveTo(.4,.6,0,0); }));
+    return;
+  }
+  const miss = [0,1,2,3].find(s => !ss.includes(s));
+  withRot(c, (miss+2)%4, () => fillWall(
+    () => { c.moveTo(0,0); c.lineTo(1,0); c.lineTo(1,1); c.quadraticCurveTo(.5,.45,0,1); c.closePath(); },
+    () => { c.moveTo(1,1); c.quadraticCurveTo(.5,.45,0,1); }));
+}
+function roadShape(c, ss){
+  const stroke = () => {
+    c.lineCap = 'butt';
+    c.strokeStyle = COL.roadEdge; c.lineWidth = .14; c.stroke();
+    c.strokeStyle = COL.road; c.lineWidth = .095; c.stroke();
+  };
+  if (ss.length === 1){
+    withRot(c, ss[0], () => { c.beginPath(); c.moveTo(.5,0); c.lineTo(.5,.5); stroke(); });
+  } else if ((ss[0]+2)%4 === ss[1]){
+    withRot(c, ss[0], () => { c.beginPath(); c.moveTo(.5,0); c.lineTo(.5,1); stroke(); });
+  } else {
+    withRot(c, adjStart(ss), () => { c.beginPath(); c.arc(1,0,.5,Math.PI,Math.PI/2,true); stroke(); });
+  }
+}
+function drawShield(c, [x,y]){
+  c.save(); c.translate(x,y); c.scale(.17,.17);
+  c.beginPath(); c.moveTo(-.5,-.5); c.lineTo(.5,-.5); c.lineTo(.5,0); c.quadraticCurveTo(.5,.45,0,.6); c.quadraticCurveTo(-.5,.45,-.5,0); c.closePath();
+  c.fillStyle = COL.shield; c.fill(); c.lineWidth = .12; c.strokeStyle = '#f4ead2'; c.stroke();
+  c.beginPath(); c.moveTo(0,-.42); c.lineTo(0,.45); c.moveTo(-.42,-.05); c.lineTo(.42,-.05); c.lineWidth = .14; c.stroke();
+  c.restore();
+}
+function drawAbbey(c){
+  c.save();
+  c.fillStyle = COL.abbey; c.strokeStyle = '#5a4630'; c.lineWidth = .02;
+  c.fillRect(.37,.42,.26,.2); c.strokeRect(.37,.42,.26,.2);
+  c.beginPath(); c.moveTo(.33,.44); c.lineTo(.5,.28); c.lineTo(.67,.44); c.closePath(); c.fillStyle = COL.roof; c.fill(); c.stroke();
+  c.fillStyle = '#5a4630'; c.fillRect(.47,.52,.06,.1);
+  c.beginPath(); c.moveTo(.5,.18); c.lineTo(.5,.29); c.moveTo(.465,.215); c.lineTo(.535,.215); c.lineWidth = .02; c.stroke();
+  c.restore();
+}
+function rng(seed){ return () => { seed = (seed*16807) % 2147483647; return (seed-1)/2147483646; }; }
+const TILE_IMG = TILES.map((tile, ti) => {
+  const S = 256, cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const c = cv.getContext('2d');
+  c.scale(S,S);
+  c.fillStyle = COL.field; c.fillRect(0,0,1,1);
+  const rnd = rng(ti*97+13);
+  c.strokeStyle = COL.grass; c.lineWidth = .012; c.lineCap = 'round';
+  for (let i = 0; i < 26; i++){ const x = rnd(), y = rnd(); c.beginPath(); c.moveTo(x,y); c.lineTo(x+.012,y-.03); c.moveTo(x+.02,y); c.lineTo(x+.03,y-.025); c.stroke(); }
+  tile.f.forEach(f => { if (f.t === 'R') roadShape(c, f.s); });
+  const singles = tile.f.filter(f => f.t === 'R' && f.s.length === 1).length;
+  if (singles >= 3){ c.fillStyle = '#7d5232'; c.fillRect(.41,.41,.18,.18); c.strokeStyle = COL.roadEdge; c.lineWidth = .02; c.strokeRect(.41,.41,.18,.18); }
+  tile.f.forEach(f => { if (f.t === 'C') cityShape(c, f.s); });
+  tile.f.forEach(f => { if (f.t === 'K') drawAbbey(c); if (f.sh) drawShield(c, f.sp); });
+  c.lineWidth = .012; c.strokeStyle = '#00000040'; c.strokeRect(0,0,1,1);
+  return cv;
+});
+
+// ───────── 판 그리기 ─────────
+const cv = document.getElementById('board'), ctx = cv.getContext('2d');
+let W = 0, H = 0, dpr = 1;
+const cam = {x:0, y:0, z:80};
+let anims = [], flashes = [];
+let raf = 0, needFit = true;
+function resize(){
+  const r = cv.getBoundingClientRect();
+  dpr = Math.min(window.devicePixelRatio || 1, 3);
+  W = r.width; H = r.height;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  if (needFit && W){ needFit = false; fitView(false); }
+  draw();
+}
+new ResizeObserver(resize).observe(document.getElementById('wrap'));
+function draw(){ if (!raf) raf = requestAnimationFrame(render); }
+function toScreen(wx,wy){ return [W/2 + (wx-cam.x)*cam.z, H/2 + (wy-cam.y)*cam.z]; }
+function toWorld(sx,sy){ return [cam.x + (sx-W/2)/cam.z, cam.y + (sy-H/2)/cam.z]; }
+// all=true: 판 전체가 들어오게(⤢). 아니면 타일이 크게 보이도록 가로 4장 남짓으로.
+function fitView(all){
+  if (!G) return;
+  let x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+  for (const k of G.board.keys()){ const [x,y] = k.split(',').map(Number); x0 = Math.min(x0,x); x1 = Math.max(x1,x); y0 = Math.min(y0,y); y1 = Math.max(y1,y); }
+  cam.x = (x0+x1)/2; cam.y = (y0+y1)/2;
+  if (!W) needFit = true;
+  const w = W || 360, h = H || 500;
+  const big = Math.min(w, h*1.2) / 4.2;
+  cam.z = all ? Math.max(24, Math.min(big, Math.min(w/(x1-x0+2), h/(y1-y0+2)))) : big;
+  if (!all && G.last){ cam.x = G.last.x; cam.y = G.last.y; }
+  draw();
+}
+function ensureVisible(x,y){
+  const [sx,sy] = toScreen(x,y), m = cam.z*0.6;
+  if (sx < m || sx > W-m || sy < m || sy > H-m){ cam.x = x; cam.y = y; }
+}
+function meepleShape(c){
+  c.beginPath();
+  c.moveTo(-.11,-.2);
+  c.quadraticCurveTo(-.5,-.16,-.48,0); c.lineTo(-.2,.05); c.lineTo(-.38,.45); c.lineTo(-.12,.45);
+  c.lineTo(0,.24); c.lineTo(.12,.45); c.lineTo(.38,.45); c.lineTo(.2,.05); c.lineTo(.48,0);
+  c.quadraticCurveTo(.5,-.16,.11,-.2); c.closePath();
+  c.moveTo(.15,-.33); c.arc(0,-.33,.15,0,Math.PI*2);
+}
+function drawMeeple(c, sx, sy, size, color, lying, ghost){
+  c.save(); c.translate(sx,sy); c.scale(size,size);
+  if (lying) c.rotate(-Math.PI/2);
+  meepleShape(c);
+  c.globalAlpha = ghost ? .75 : 1;
+  c.lineJoin = 'round';
+  c.lineWidth = .14; c.strokeStyle = color === '#2b2b2b' ? '#e8dcc0' : '#1a120b'; c.stroke();
+  c.fillStyle = color; c.fill();
+  c.restore();
+}
+function render(){
+  raf = 0;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = '#2a2119'; ctx.fillRect(0,0,W,H);
+  if (!G) return;
+  const z = cam.z;
+  // 옅은 격자
+  ctx.strokeStyle = '#ffffff0a'; ctx.lineWidth = 1;
+  const [wx0,wy0] = toWorld(0,0), [wx1,wy1] = toWorld(W,H);
+  ctx.beginPath();
+  for (let x = Math.floor(wx0)-.5; x <= wx1+1; x++){ const [sx] = toScreen(x,0); ctx.moveTo(sx,0); ctx.lineTo(sx,H); }
+  for (let y = Math.floor(wy0)-.5; y <= wy1+1; y++){ const [,sy] = toScreen(0,y); ctx.moveTo(0,sy); ctx.lineTo(W,sy); }
+  ctx.stroke();
+  const humanPlace = G.phase === 'place' && !G.players[G.cur].ai && !busy;
+  if (humanPlace){
+    for (const [k, rs] of cands){
+      const [x,y] = k.split(',').map(Number), [sx,sy] = toScreen(x,y);
+      const ok = rs.includes(pending ? pending.r : rotView);
+      ctx.fillStyle = ok ? '#e3b75a30' : '#e3b75a14';
+      ctx.fillRect(sx-z/2+3, sy-z/2+3, z-6, z-6);
+      ctx.setLineDash([5,4]); ctx.strokeStyle = ok ? '#e3b75acc' : '#e3b75a66'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(sx-z/2+3, sy-z/2+3, z-6, z-6); ctx.setLineDash([]);
+    }
+  }
+  const drawTile = (x,y,t,r,alpha) => {
+    const [sx,sy] = toScreen(x,y);
+    if (sx < -z || sx > W+z || sy < -z || sy > H+z) return;
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(sx,sy); ctx.rotate(r*Math.PI/2);
+    ctx.drawImage(TILE_IMG[t], -z/2, -z/2, z, z); ctx.restore();
+  };
+  for (const [k,c] of G.board){ const [x,y] = k.split(',').map(Number); drawTile(x,y,c.t,c.r,1); }
+  if (G.last && G.board.has(key(G.last.x,G.last.y))){
+    const [sx,sy] = toScreen(G.last.x,G.last.y);
+    ctx.strokeStyle = G.players[G.last.p].color; ctx.lineWidth = 3;
+    ctx.strokeRect(sx-z/2+1.5, sy-z/2+1.5, z-3, z-3);
+  }
+  if (pending && G.tile !== null){
+    drawTile(pending.x, pending.y, G.tile, pending.r, .92);
+    const [sx,sy] = toScreen(pending.x,pending.y);
+    ctx.strokeStyle = '#e3b75a'; ctx.lineWidth = 3; ctx.strokeRect(sx-z/2+1.5, sy-z/2+1.5, z-3, z-3);
+  }
+  const nowF = performance.now();
+  flashes = flashes.filter(f => nowF - f.t0 < 1800);
+  for (const f of flashes){
+    const k = (nowF - f.t0)/1800, a = (0.5 + 0.5*Math.sin(k*Math.PI*6)) * (1-k);
+    ctx.globalAlpha = 0.55*a; ctx.fillStyle = f.color === '#2b2b2b' ? '#ffffff' : f.color;
+    for (const fk of f.keys){ const [x,y] = fk.split(',').map(Number), [sx,sy] = toScreen(x,y); ctx.fillRect(sx-z/2, sy-z/2, z, z); }
+    ctx.globalAlpha = 1;
+  }
+  for (const [k,c] of G.board){
+    if (!c.m) continue;
+    const [x,y] = k.split(',').map(Number), f = rotOf(c).feats[c.m.f];
+    const [sx,sy] = toScreen(x-.5+f.m[0], y-.5+f.m[1]);
+    drawMeeple(ctx, sx, sy, z*.3, G.players[c.m.p].color, f.t === 'F');
+  }
+  if (G.phase === 'meeple' && !G.players[G.cur].ai){
+    const {x,y} = G.last;
+    for (const s of spots){
+      const [sx,sy] = toScreen(x-.5+s.m[0], y-.5+s.m[1]);
+      if (meepleSel === s.fi){ drawMeeple(ctx, sx, sy, z*.3, G.players[G.cur].color, s.t === 'F', true); continue; }
+      ctx.beginPath(); ctx.arc(sx, sy, Math.max(9, z*.09), 0, Math.PI*2);
+      ctx.fillStyle = '#ffffffb0'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = G.players[G.cur].color; ctx.stroke();
+    }
+  }
+  const now = performance.now();
+  anims = anims.filter(a => now - a.t0 < 1400);
+  for (const a of anims){
+    const k = (now - a.t0)/1400, [sx,sy] = toScreen(a.at[0], a.at[1]);
+    ctx.globalAlpha = 1 - k;
+    ctx.font = '700 22px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#1a120b';
+    ctx.strokeText(a.text, sx, sy - k*40); ctx.fillStyle = a.color === '#2b2b2b' ? '#f3e9d2' : a.color; ctx.fillText(a.text, sx, sy - k*40);
+    ctx.globalAlpha = 1;
+  }
+  if (anims.length || flashes.length) draw();
+}
+function floatText(at, text, color){ anims.push({at, text, color, t0:performance.now()}); draw(); }
+function flashRegion(keys, color){ if (keys) { flashes.push({keys, color, t0:performance.now()}); draw(); } }
+
+// ───────── 터치: 이동·확대·누르기 ─────────
+const ptrs = new Map();
+// 캔버스 기준 좌표(offsetX 대신 직접 계산)
+const local = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+let gesture = null;
+cv.addEventListener('pointerdown', e => {
+  try { cv.setPointerCapture(e.pointerId); } catch(err){}
+  ptrs.set(e.pointerId, {x:local(e)[0], y:local(e)[1]});
+  if (ptrs.size === 1) gesture = {tap:true, sx:local(e)[0], sy:local(e)[1]};
+  else if (ptrs.size === 2){
+    const [a,b] = [...ptrs.values()];
+    gesture = {tap:false, dist:Math.hypot(a.x-b.x, a.y-b.y), z:cam.z, mid:toWorld((a.x+b.x)/2, (a.y+b.y)/2)};
+  }
+});
+cv.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId);
+  if (!p || !gesture) return;
+  const [nx, ny] = local(e);
+  if (ptrs.size === 1){
+    if (Math.hypot(nx-gesture.sx, ny-gesture.sy) > 8) gesture.tap = false;
+    if (!gesture.tap){ cam.x -= (nx-p.x)/cam.z; cam.y -= (ny-p.y)/cam.z; draw(); }
+  }
+  p.x = nx; p.y = ny;
+  if (ptrs.size === 2){
+    const [a,b] = [...ptrs.values()];
+    const d = Math.hypot(a.x-b.x, a.y-b.y);
+    cam.z = Math.max(20, Math.min(260, gesture.z * d / gesture.dist));
+    const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+    cam.x = gesture.mid[0] - (mx-W/2)/cam.z;
+    cam.y = gesture.mid[1] - (my-H/2)/cam.z;
+    draw();
+  }
+});
+const ptrEnd = e => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId);
+  if (gesture && gesture.tap && ptrs.size === 0 && e.type === 'pointerup') onTap(...local(e));
+  if (ptrs.size === 0) gesture = null;
+  else if (ptrs.size === 1){ const [q] = [...ptrs.values()]; gesture = {tap:false, sx:q.x, sy:q.y}; }
+};
+cv.addEventListener('pointerup', ptrEnd);
+cv.addEventListener('pointercancel', ptrEnd);
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const before = toWorld(...local(e));
+  cam.z = Math.max(20, Math.min(260, cam.z * Math.exp(-e.deltaY*0.0015)));
+  const after = toWorld(...local(e));
+  cam.x += before[0]-after[0]; cam.y += before[1]-after[1];
+  draw();
+}, {passive:false});
+
+function onTap(sx, sy){
+  if (!G || busy || G.players[G.cur].ai) return;
+  const [wx,wy] = toWorld(sx,sy);
+  if (G.phase === 'place'){
+    const x = Math.round(wx), y = Math.round(wy), rs = cands.get(key(x,y));
+    if (!rs){ pending = null; updateUI(); draw(); return; }
+    if (pending && pending.x === x && pending.y === y) pending.r = nextRot(rs, pending.r);
+    else pending = {x, y, r: rs.includes(rotView) ? rotView : rs[0]};
+    rotView = pending.r;
+    updateUI(); draw();
+  } else if (G.phase === 'meeple'){
+    const {x,y} = G.last;
+    let hit = null, bestD = Infinity;
+    for (const s of spots){
+      const [px,py] = toScreen(x-.5+s.m[0], y-.5+s.m[1]), d = Math.hypot(px-sx, py-sy);
+      if (d < Math.max(24, cam.z*.18) && d < bestD){ hit = s; bestD = d; }
+    }
+    meepleSel = hit ? (meepleSel === hit.fi ? null : hit.fi) : null;
+    updateUI(); draw();
+  }
+}
+function nextRot(rs, r){ for (let i = 1; i <= 4; i++){ const n = (r+i)%4; if (rs.includes(n)) return n; } return r; }
+
+// ───────── 화면 글자·버튼 ─────────
+const $ = id => document.getElementById(id);
+const pv = $('preview'), pctx = pv.getContext('2d');
+function updateUI(){
+  if (!G) return;
+  const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
+  $('chips').innerHTML = G.players.map((p,i) => `
+    <div class="chip ${i === G.cur && G.phase !== 'over' ? 'on' : ''}">
+      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--muted)">${({easy:'하',mid:'중',hard:'상'})[p.level] || ''}</small>` : ''}</div>
+      <div class="sc"><b>${p.score}</b><small>일꾼 ${p.meeples}</small></div>
+    </div>`).join('');
+  const P = G.players[G.cur], b1 = $('b1'), b2 = $('b2');
+  pctx.setTransform(1,0,0,1,0,0); pctx.clearRect(0,0,144,144);
+  if (G.tile !== null && G.phase === 'place'){
+    const r = pending ? pending.r : rotView;
+    pctx.save(); pctx.translate(72,72); pctx.rotate(r*Math.PI/2); pctx.drawImage(TILE_IMG[G.tile], -66, -66, 132, 132); pctx.restore();
+  } else if (G.phase === 'meeple'){
+    drawMeeple(pctx, 72, 76, 80, P.color, false);
+  }
+  $('left').textContent = G.phase === 'over' ? '모든 타일을 놓았어요' : `남은 타일 ${G.deck.length}장`;
+  b1.hidden = b2.hidden = false; b1.disabled = b2.disabled = false;
+  if (G.phase === 'over'){
+    $('who').textContent = '게임 끝';
+    $('hint').textContent = '결과를 다시 보거나 새 게임을 시작하세요.';
+    b1.textContent = '결과'; b2.textContent = '새 게임';
+    b1.onclick = showResult; b2.onclick = openSetup;
+    $('undo').hidden = true;
+    return;
+  }
+  $('undo').hidden = !canUndo();
+  $('who').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} 차례`;
+  if (P.ai || busy){
+    $('hint').textContent = '컴퓨터가 생각하는 중…';
+    b1.hidden = b2.hidden = true;
+    return;
+  }
+  if (G.phase === 'place'){
+    $('hint').textContent = pending ? '같은 칸을 누르면 돌아가요. 맞으면 놓기.' : '점선 칸을 눌러 타일을 놓으세요.';
+    b1.textContent = '⟳ 돌리기'; b2.textContent = '놓기';
+    b2.disabled = !pending;
+    b1.onclick = () => {
+      if (pending) pending.r = nextRot(cands.get(key(pending.x,pending.y)), pending.r);
+      else rotView = (rotView+1)%4;
+      if (pending) rotView = pending.r;
+      updateUI(); draw();
+    };
+    b2.onclick = confirmPlace;
+  } else if (G.phase === 'meeple'){
+    $('hint').textContent = meepleSel === null ? `일꾼을 올릴 곳(흰 동그라미)을 누르세요. 남은 일꾼 ${P.meeples}` : `${KIND[spots.find(s => s.fi === meepleSel).t]}에 일꾼을 올립니다.`;
+    b1.textContent = '← 되돌리기';
+    b2.textContent = meepleSel === null ? '건너뛰기' : '일꾼 놓기';
+    b1.onclick = backToPlace;
+    b2.onclick = () => finishTurn(meepleSel);
+  }
+}
+pv.addEventListener('click', () => { if ($('b1').textContent === '⟳ 돌리기' && !$('b1').hidden) $('b1').click(); });
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let toastTimer = 0;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.remove('hide');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hide'), 2600);
+}
+
+// ───────── 설정(컴퓨터 속도) ─────────
+const PREFS_KEY = 'tileroad-prefs';
+let prefs = {speed:'normal'};
+try { prefs = {...prefs, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')}; } catch(e){}
+function renderSpeed(){ document.querySelectorAll('.speedSeg button').forEach(b => b.classList.toggle('on', b.dataset.speed === prefs.speed)); }
+document.querySelectorAll('.speedSeg button').forEach(b => b.onclick = () => {
+  prefs.speed = b.dataset.speed;
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch(e){}
+  renderSpeed();
+});
+renderSpeed();
+
+// ───────── 자리 정하기 ─────────
+const LEVELS = [['easy','하'],['mid','중'],['hard','상']];
+let seats = [];
+function defaultSeats(){ return [{name:'나', color:COLORS[0].c, ai:false, level:'hard'}, {name:'컴퓨터 1', color:COLORS[1].c, ai:true, level:'hard'}]; }
+function renderSeats(){
+  $('seats').innerHTML = seats.map((s,i) => `
+    <div class="seat">
+      <span class="dot" style="background:${s.color}"></span>
+      <input data-i="${i}" value="${esc(s.name)}" maxlength="8">
+      <div class="seg"><button data-i="${i}" data-ai="0" class="${s.ai ? '' : 'on'}">사람</button><button data-i="${i}" data-ai="1" class="${s.ai ? 'on' : ''}">컴퓨터</button></div>
+      <button class="x" data-del="${i}" ${seats.length <= 2 ? 'disabled' : ''}>×</button>
+      ${s.ai ? `<div class="lv">실력<div class="seg small">${LEVELS.map(([v,t]) => `<button data-lv="${v}" data-i="${i}" class="${(s.level || 'hard') === v ? 'on' : ''}">${t}</button>`).join('')}</div></div>` : ''}
+    </div>`).join('');
+  $('addSeat').disabled = seats.length >= 5;
+  $('seats').querySelectorAll('input').forEach(inp => inp.oninput = () => { seats[inp.dataset.i].name = inp.value; });
+  $('seats').querySelectorAll('[data-ai]').forEach(b => b.onclick = () => {
+    const s = seats[b.dataset.i], ai = b.dataset.ai === '1';
+    if (ai && !s.ai && seats.filter(x => x.ai).length >= 4){ alert('컴퓨터는 4명까지예요.'); return; }
+    s.ai = ai;
+    if (ai && /^(나|사람)/.test(s.name)) s.name = '컴퓨터 ' + (seats.filter(x => x.ai).length);
+    if (!ai && /^컴퓨터/.test(s.name)) s.name = '사람 ' + (+b.dataset.i + 1);
+    renderSeats();
+  });
+  $('seats').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { seats[b.dataset.i].level = b.dataset.lv; renderSeats(); });
+  $('seats').querySelectorAll('[data-del]').forEach(b => b.onclick = () => { seats.splice(+b.dataset.del, 1); recolor(); renderSeats(); });
+}
+function recolor(){ seats.forEach((s,i) => s.color = COLORS[i].c); }
+$('addSeat').onclick = () => {
+  if (seats.length >= 5) return;
+  const ai = seats.filter(x => x.ai).length < 4;
+  seats.push({name: ai ? '컴퓨터 ' + (seats.filter(x => x.ai).length+1) : '사람 ' + (seats.length+1), color:COLORS[seats.length].c, ai, level:'hard'});
+  renderSeats();
+};
+$('startBtn').onclick = () => {
+  if (gameInProgress() && !confirm('진행 중인 게임이 지워져요. 새로 시작할까요?')) return;
+  seats.forEach((s,i) => { s.name = s.name.trim() || COLORS[i].n; });
+  hideAll();
+  newGame(seats.map(s => ({...s})));
+};
+function gameInProgress(){
+  if (G) return G.phase !== 'over';
+  const d = loadSave();
+  return !!(d && d.phase !== 'over');
+}
+function openSetup(){
+  // 기본은 사람 1명(첫 자리) + 나머지 컴퓨터. 지난 게임이 있으면 자리 수와 컴퓨터 실력만 이어받는다.
+  seats = defaultSeats();
+  if (G && G.players.length > 2){
+    seats = G.players.map((p,i) => i === 0 ? {name:'나', color:COLORS[0].c, ai:false, level:'hard'}
+      : {name:'컴퓨터 ' + i, color:COLORS[i].c, ai:true, level:p.ai ? (p.level || 'hard') : 'hard'});
+  }
+  renderSeats(); renderSpeed();
+  hideAll(); $('setup').hidden = false;
+}
+function hideAll(){ ['home','setup','menu','rules','result','tiles'].forEach(id => $(id).hidden = true); }
+
+// ───────── 첫 화면 ─────────
+function openHome(){
+  hideAll();
+  $('resumeBtn').hidden = !gameInProgress();
+  $('homeNew').classList.toggle('primary', !gameInProgress());
+  $('home').hidden = false;
+  drawScene();
+}
+$('resumeBtn').onclick = () => {
+  hideAll();
+  if (!G){ const d = loadSave(); if (d) resume(d); }
+  else { updateUI(); draw(); }
+};
+$('homeNew').onclick = openSetup;
+$('setupBack').onclick = openHome;
+$('rulesBtn0').onclick = () => { $('rules').hidden = false; };
+// 첫 화면 그림: 규칙에 맞게 이어 붙인 타일 4×3장
+let sceneDone = false;
+function drawScene(){
+  if (sceneDone) return;
+  const COLS = 4, ROWS = 3, rnd = rng(20261026);
+  for (let tries = 0; tries < 50; tries++){
+    const b = new Map(), pool = [];
+    TILES.forEach((t,i) => { for (let k = 0; k < t.n; k++) pool.push(i); });
+    let ok = true;
+    for (let y = 0; y < ROWS && ok; y++) for (let x = 0; x < COLS && ok; x++){
+      const opts = [];
+      pool.forEach((t, pi) => { for (let r = 0; r < 4; r++){
+        const ri = ROT[t][r];
+        const l = b.get(key(x-1,y)), u = b.get(key(x,y-1));
+        if (l && ROT[l.t][l.r].edges[1] !== ri.edges[3]) continue;
+        if (u && ROT[u.t][u.r].edges[2] !== ri.edges[0]) continue;
+        // 성이 있는 타일을 더 자주 고른다
+        const w = ri.edges.includes('C') ? 3 : 1;
+        for (let j = 0; j < w; j++) opts.push([t, r, pi]);
+      }});
+      if (!opts.length){ ok = false; break; }
+      const [t, r, pi] = opts[Math.floor(rnd()*opts.length)];
+      pool.splice(pi, 1);
+      b.set(key(x,y), {t, r});
+    }
+    if (!ok) continue;
+    const c = $('scene').getContext('2d'), S = 190;
+    for (const [k,cell] of b){
+      const [x,y] = k.split(',').map(Number);
+      c.save(); c.translate(x*S + S/2, y*S + S/2); c.rotate(cell.r*Math.PI/2); c.drawImage(TILE_IMG[cell.t], -S/2, -S/2, S, S); c.restore();
+    }
+    // 일꾼 세 개
+    const picks = [...b].filter(([,cell]) => ROT[cell.t][cell.r].feats.some(f => f.t !== 'F'));
+    [1, 6, 10].forEach((ix, n) => {
+      const pk = picks[ix % picks.length];
+      if (!pk) return;
+      const [x,y] = pk[0].split(',').map(Number), f = ROT[pk[1].t][pk[1].r].feats.find(f => f.t !== 'F');
+      drawMeeple(c, x*S + f.m[0]*S, y*S + f.m[1]*S, S*.3, COLORS[n].c, false);
+    });
+    sceneDone = true;
+    return;
+  }
+}
+
+// ───────── 메뉴·결과 ─────────
+$('menuBtn').onclick = () => {
+  $('logBox').hidden = true;
+  $('mUndo').hidden = !canUndo();
+  $('menu').hidden = false;
+};
+$('fit').onclick = () => fitView(true);
+$('undo').onclick = undo;
+$('mUndo').onclick = () => { $('menu').hidden = true; undo(); };
+$('mClose').onclick = () => $('menu').hidden = true;
+$('mHome').onclick = openHome;
+$('mRules').onclick = () => { $('rules').hidden = false; };
+$('rulesClose').onclick = () => $('rules').hidden = true;
+$('mLog').onclick = () => {
+  const box = $('logBox');
+  box.innerHTML = G && G.log.length
+    ? G.log.slice().reverse().map(l => `<div><span class="dot" style="background:${G.players[l.p].color}"></span>${esc(G.players[l.p].name)} · ${KIND[l.kind]} 완성 <b>+${l.pts}</b></div>`).join('')
+    : '<div>아직 완성된 곳이 없어요.</div>';
+  box.hidden = false;
+};
+const TILE_URL = TILE_IMG.map(cv => cv.toDataURL());
+$('mTiles').onclick = () => {
+  const counts = TILES.map(() => 0);
+  if (G) G.deck.forEach(t => counts[t]++);
+  $('tilesTitle').textContent = `남은 타일 ${G ? G.deck.length : 0}장`;
+  $('tgrid').innerHTML = TILES.map((t,i) => `<div class="${counts[i] ? '' : 'zero'}"><img src="${TILE_URL[i]}" alt=""><span>${counts[i]} / ${t.n - (i === START_TILE ? 1 : 0)}</span></div>`).join('');
+  $('tiles').hidden = false;
+};
+$('tilesClose').onclick = () => $('tiles').hidden = true;
+function showResult(){
+  const ps = G.players.map((p,i) => ({...p, i})).sort((a,b) => b.score - a.score);
+  const top = ps[0].score, winners = ps.filter(p => p.score === top);
+  $('resTitle').textContent = winners.length > 1 ? '공동 우승' : `${winners[0].name} 우승`;
+  $('resSub').textContent = `${G.turnNo}차례 · 타일 ${G.board.size}장`;
+  $('resTable').innerHTML = '<tr><th>이름</th><th>게임 중</th><th>길</th><th>성</th><th>수도원</th><th>들판</th><th>합계</th></tr>' +
+    ps.map(p => {
+      const e = p.end || {R:0,C:0,K:0,F:0}, endSum = e.R+e.C+e.K+e.F;
+      return `<tr><td><span class="dot" style="display:inline-block;background:${p.color};margin-right:5px"></span>${esc(p.name)}</td><td>${p.score-endSum}</td><td>${e.R}</td><td>${e.C}</td><td>${e.K}</td><td>${e.F}</td><td class="tot">${p.score}</td></tr>`;
+    }).join('');
+  $('result').hidden = false;
+}
+$('resBoard').onclick = () => { $('result').hidden = true; fitView(true); };
+$('resNew').onclick = openSetup;
+
+// ───────── 시작: 언제나 첫 화면부터 ─────────
+openHome();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
