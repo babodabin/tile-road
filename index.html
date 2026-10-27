@@ -32,8 +32,8 @@
   color-scheme:dark;
 }
 /* 상태바는 불투명(black): iOS가 시계 아래부터 화면을 시작하므로 위 여백(env)은 0이 정상 — 값을 억지로 넣지 않는다.
-   아래는 홈 인디케이터 자리만 조금(약 22px) 남긴다. */
-html{box-sizing:border-box;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) * .65);background:var(--table)}
+   아래는 빈 띠를 두지 않는다: 아래 막대(.tray)가 화면 맨 끝까지 내려가고, 홈 인디케이터 줄은 막대 위에 겹친다. */
+html{box-sizing:border-box;height:100%;padding-top:env(safe-area-inset-top,0px);background:var(--table)}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
 body{margin:0;height:100%;background:var(--table);color:var(--ink);font-family:var(--body);font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
@@ -59,7 +59,7 @@ header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding
 #toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#1c150fe6;border:1px solid var(--rule);border-radius:10px;padding:7px 12px;font-size:13px;max-width:80%;text-align:center;pointer-events:none;transition:opacity .3s}
 #toast.hide{opacity:0}
 
-footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-top:8px;padding-bottom:4px;display:flex;align-items:center;gap:10px;min-height:88px}
+footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-top:8px;padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 22px));display:flex;align-items:center;gap:10px;min-height:88px}
 #preview{width:84px;height:84px;flex:none;border-radius:6px;background:#1c150f}
 #info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #who{font-family:var(--display);font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -239,7 +239,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v3 · 2026-10-27';
+const APP_VERSION = 'v4 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
