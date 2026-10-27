@@ -33,10 +33,10 @@
 }
 /* 상태바는 불투명(black): iOS가 시계 아래부터 화면을 시작하므로 위 여백(env)은 0이 정상 — 값을 억지로 넣지 않는다.
    아래는 빈 띠를 두지 않는다: 아래 막대(.tray)가 화면 맨 끝까지 내려가고, 홈 인디케이터 줄은 막대 위에 겹친다. */
-html{box-sizing:border-box;height:100%;background:var(--table)}
+html{box-sizing:border-box;height:100%;background:var(--table);position:fixed;inset:0;overflow:hidden}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
-body{margin:0;height:100%;background:var(--table);color:var(--ink);font-family:var(--body);font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+body{margin:0;height:100%;position:fixed;inset:0;background:var(--table);color:var(--ink);font-family:var(--body);font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 /* 화면에 딱 고정: 아이폰을 돌렸다 오면 페이지가 밀려 위가 잘리고 아래가 비는 문제를 막는다.
    가로 화면에서도 양옆을 비우지 않고 꽉 채운다(노치 쪽은 위·아래 막대의 .gut 여백이 피함). */
 #app{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);display:flex;flex-direction:column}
@@ -252,7 +252,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v8 · 2026-10-27';
+const APP_VERSION = 'v9 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -1387,10 +1387,8 @@ $('resNew').onclick = openSetup;
 document.querySelectorAll('.ver').forEach(el => el.textContent = APP_VERSION);
 // 화면을 돌리면 페이지가 밀려 있을 수 있어 맨 위로 되돌린다
 window.addEventListener('resize', resize);
-window.addEventListener('orientationchange', () => setTimeout(() => {
-  if (window.scrollY || document.body.scrollTop){ window.scrollTo(0, 0); document.body.scrollTop = 0; }
-  resize();
-}, 350));
+// 돌릴 때 억지로 스크롤을 되돌리지 않는다(되돌리는 순간 위쪽이 한 번 더 출렁임). 문서 자체가 움직이지 않게 html·body를 고정해 둠.
+window.addEventListener('orientationchange', () => setTimeout(resize, 350));
 // ───────── 시작: 언제나 첫 화면부터 ─────────
 openHome();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
