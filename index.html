@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#2a2119">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="성과 길">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -31,7 +31,9 @@
   --body:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
   color-scheme:dark;
 }
-html{box-sizing:border-box;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--table)}
+/* 상태바는 불투명(black): iOS가 시계 아래부터 화면을 시작하므로 위 여백(env)은 0이 정상 — 값을 억지로 넣지 않는다.
+   아래는 홈 인디케이터 자리만 조금(약 22px) 남긴다. */
+html{box-sizing:border-box;height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) * .65);background:var(--table)}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
 body{margin:0;height:100%;background:var(--table);color:var(--ink);font-family:var(--body);font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
@@ -39,7 +41,7 @@ body{margin:0;height:100%;background:var(--table);color:var(--ink);font-family:v
 .gut{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 button{font-family:inherit;color:inherit;cursor:pointer}
 
-header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding-block:6px;display:flex;align-items:center;gap:6px;min-height:50px}
+header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding-top:12px;padding-bottom:6px;display:flex;align-items:center;gap:6px;min-height:50px}
 #chips{display:flex;gap:4px;flex:1;min-width:0}
 .chip{flex:1;min-width:0;border-radius:9px;padding:4px 6px;background:var(--surface-2);border:2px solid transparent;display:flex;flex-direction:column;gap:1px;line-height:1.15}
 .chip.on{border-color:var(--gold)}
@@ -57,7 +59,7 @@ header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding
 #toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#1c150fe6;border:1px solid var(--rule);border-radius:10px;padding:7px 12px;font-size:13px;max-width:80%;text-align:center;pointer-events:none;transition:opacity .3s}
 #toast.hide{opacity:0}
 
-footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-block:8px;display:flex;align-items:center;gap:10px;min-height:88px}
+footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-top:8px;padding-bottom:4px;display:flex;align-items:center;gap:10px;min-height:88px}
 #preview{width:84px;height:84px;flex:none;border-radius:6px;background:#1c150f}
 #info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #who{font-family:var(--display);font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -145,7 +147,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <button class="btn primary wide" id="resumeBtn" hidden>이어하기</button>
     <button class="btn wide" id="homeNew">새 게임</button>
     <button class="btn wide" id="rulesBtn0">규칙</button>
-    <p class="foot">기본판 타일 72장 · 2~5명 · 사람과 컴퓨터</p>
+    <p class="foot">기본판 타일 72장 · 2~5명 · 사람과 컴퓨터<br><span class="ver"></span></p>
   </div>
 </div>
 
@@ -172,6 +174,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
     <div id="logBox" class="log" hidden></div>
     <button id="mHome" style="margin-top:8px">처음 화면</button>
+    <p class="note ver" style="text-align:center"></p>
   </div>
 </div>
 
@@ -225,6 +228,8 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 들판 포트(port): 각 변을 둘로 나눈 8칸, 왼쪽 위에서 시계 방향 — 0 위-왼, 1 위-오, 2 오-위, 3 오-아, 4 아-오, 5 아-왼, 6 왼-아, 7 왼-위.
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
+// 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
+const APP_VERSION = 'v2 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -1334,6 +1339,7 @@ function showResult(){
 $('resBoard').onclick = () => { $('result').hidden = true; fitView(true); };
 $('resNew').onclick = openSetup;
 
+document.querySelectorAll('.ver').forEach(el => el.textContent = '판번호 ' + APP_VERSION);
 // ───────── 시작: 언제나 첫 화면부터 ─────────
 openHome();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
