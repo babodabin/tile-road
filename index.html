@@ -252,7 +252,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v7 · 2026-10-27';
+const APP_VERSION = 'v8 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -927,13 +927,23 @@ let W = 0, H = 0, dpr = 1;
 const cam = {x:0, y:0, z:80};
 let anims = [], flashes = [];
 let raf = 0, needFit = true;
-function resize(){
+// 화면 크기가 바뀌어도 판 가운데 보던 곳은 그대로 둔다(cam은 가운데 기준).
+// 크기가 같으면 아무것도 안 하고, 바뀌면 그 자리에서 바로 다시 그린다 — 캔버스가 비었다가 다음 틀에 그려지며 깜빡/툭 튀는 것을 막는다.
+// 캔버스 크기를 실제 화면 크기에 맞춘다. 바뀌었으면 true.
+function syncSize(){
   const r = cv.getBoundingClientRect();
-  dpr = Math.min(window.devicePixelRatio || 1, 3);
-  W = r.width; H = r.height;
+  const nd = Math.min(window.devicePixelRatio || 1, 3);
+  if (!r.width || !r.height) return false;
+  if (r.width === W && r.height === H && nd === dpr) return false;
+  dpr = nd; W = r.width; H = r.height;
   cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
-  if (needFit && W){ needFit = false; fitView(false); }
-  draw();
+  if (needFit){ needFit = false; fitView(false); }
+  return true;
+}
+function resize(){
+  if (!syncSize()) return;
+  if (raf){ cancelAnimationFrame(raf); raf = 0; }
+  render();
 }
 new ResizeObserver(resize).observe(document.getElementById('wrap'));
 function draw(){ if (!raf) raf = requestAnimationFrame(render); }
@@ -976,6 +986,7 @@ function drawMeeple(c, sx, sy, size, color, lying, ghost){
 }
 function render(){
   raf = 0;
+  syncSize(); // 크기 알림을 놓쳐도(가려진 화면에서 시작 등) 그릴 때 한 번 더 맞춘다
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.fillStyle = '#2a2119'; ctx.fillRect(0,0,W,H);
   if (!G) return;
@@ -1375,9 +1386,11 @@ $('resNew').onclick = openSetup;
 
 document.querySelectorAll('.ver').forEach(el => el.textContent = APP_VERSION);
 // 화면을 돌리면 페이지가 밀려 있을 수 있어 맨 위로 되돌린다
-const unshift = () => { window.scrollTo(0, 0); document.body.scrollTop = 0; resize(); };
-window.addEventListener('orientationchange', () => setTimeout(unshift, 300));
-window.addEventListener('resize', unshift);
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(() => {
+  if (window.scrollY || document.body.scrollTop){ window.scrollTo(0, 0); document.body.scrollTop = 0; }
+  resize();
+}, 350));
 // ───────── 시작: 언제나 첫 화면부터 ─────────
 openHome();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
