@@ -43,13 +43,13 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 
 header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding-top:12px;padding-bottom:6px;display:flex;align-items:center;gap:6px;min-height:50px}
 #chips{display:flex;gap:4px;flex:1;min-width:0}
-.chip{flex:1;min-width:0;border-radius:9px;padding:4px 6px;background:var(--surface-2);border:2px solid transparent;display:flex;flex-direction:column;gap:1px;line-height:1.15}
-.chip.on{border-color:var(--gold)}
-.chip .nm{display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{flex:1;min-width:0;border-radius:9px;padding:5px 7px;background:#56452f;border:2px solid #6b5840;display:flex;flex-direction:column;gap:2px;line-height:1.15;color:#fff8e8;-webkit-font-smoothing:antialiased}
+.chip.on{border-color:var(--gold);background:#6a5333;box-shadow:0 0 0 1px #0006}
+.chip .nm{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 1px #0006}
 .chip .sc{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
-.chip .sc b{font-size:16px}
-.chip .sc small{font-size:10px;color:var(--muted)}
+.chip .sc b{font-size:19px;font-weight:800}
+.chip .sc small{font-size:11px;color:#e6d8b8;font-weight:700}
 .iconbtn{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--rule);background:var(--surface-2);font-size:18px;display:grid;place-items:center}
 
 #wrap{position:relative;flex:1;min-height:0;overflow:hidden}
@@ -70,7 +70,7 @@ footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-t
 .btn.primary{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:700}
 .btn:disabled{opacity:.4}
 
-.overlay{position:fixed;inset:0;background:#120d09ee;z-index:20;overflow:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.overlay{position:fixed;inset:0;background:var(--table);z-index:20;overflow:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheet{max-width:520px;margin:0 auto;padding:24px 16px 32px}
 .title{font-family:var(--display);font-weight:800;font-size:34px;margin:12px 0 2px;letter-spacing:.04em;text-align:center}
 .sub{color:var(--muted);text-align:center;margin:0 0 22px;font-size:13px}
@@ -147,7 +147,8 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <button class="btn primary wide" id="resumeBtn" hidden>이어하기</button>
     <button class="btn wide" id="homeNew">새 게임</button>
     <button class="btn wide" id="rulesBtn0">규칙</button>
-    <p class="foot">기본판 타일 72장 · 2~5명 · 사람과 컴퓨터<br><span class="ver"></span></p>
+    <button class="btn wide" id="homeSettings">설정</button>
+    <p class="foot">기본판 타일 72장 · 2~5명 · 사람과 컴퓨터<br>판번호 <span class="ver"></span></p>
   </div>
 </div>
 
@@ -158,7 +159,6 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <div id="seats"></div>
     <button class="btn wide" id="addSeat">＋ 자리 추가</button>
     <p class="note">2~5명. 컴퓨터는 4명까지. 사람이 여럿이면 휴대폰 하나를 돌려 가며 합니다.</p>
-    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
     <button class="btn primary wide" id="startBtn">게임 시작</button>
   </div>
 </div>
@@ -171,11 +171,10 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <button id="mTiles">남은 타일 보기</button>
     <button id="mLog">점수 기록</button>
     <button id="mRules">규칙</button>
-    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    <button id="mSettings">설정</button>
     <div id="logBox" class="log" hidden></div>
     <button id="mNew">새 게임</button>
     <button id="mHome" style="margin-top:8px">처음 화면</button>
-    <p class="note ver" style="text-align:center"></p>
   </div>
 </div>
 
@@ -211,6 +210,15 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
   </div>
 </div>
 
+<div class="overlay" id="settings" hidden style="z-index:25">
+  <div class="sheet">
+    <h2>설정</h2>
+    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    <p class="note">판번호: <span class="ver"></span><br>아이폰에서 바뀐 게 안 보이면 이 번호부터 확인하세요. 앱을 완전히 닫았다 열면 새 버전을 받아요.</p>
+    <button class="btn primary wide" id="settingsClose">닫기</button>
+  </div>
+</div>
+
 <div class="overlay" id="ask" hidden style="z-index:30">
   <div class="sheet" style="min-height:100%;display:flex;flex-direction:column;justify-content:center">
     <h2 style="text-align:center">진행 중인 게임이 있어요</h2>
@@ -239,7 +247,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v4 · 2026-10-27';
+const APP_VERSION = 'v5 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -1122,7 +1130,7 @@ function updateUI(){
   const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
   $('chips').innerHTML = G.players.map((p,i) => `
     <div class="chip ${i === G.cur && G.phase !== 'over' ? 'on' : ''}">
-      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--muted)">${({easy:'하',mid:'중',hard:'상'})[p.level] || ''}</small>` : ''}</div>
+      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--gold)">${({easy:'하',mid:'중',hard:'상'})[p.level] || ''}</small>` : ''}</div>
       <div class="sc"><b>${p.score}</b><small>일꾼 ${p.meeples}</small></div>
     </div>`).join('');
   const P = G.players[G.cur], b1 = $('b1'), b2 = $('b2');
@@ -1249,7 +1257,7 @@ function openSetup(){
   renderSeats(); renderSpeed();
   hideAll(); $('setup').hidden = false;
 }
-function hideAll(){ ['home','setup','menu','rules','result','tiles'].forEach(id => $(id).hidden = true); }
+function hideAll(){ ['home','setup','menu','rules','result','tiles','settings'].forEach(id => $(id).hidden = true); }
 
 // ───────── 첫 화면 ─────────
 function openHome(){
@@ -1322,6 +1330,10 @@ $('undo').onclick = undo;
 $('mUndo').onclick = () => { $('menu').hidden = true; undo(); };
 $('mClose').onclick = () => $('menu').hidden = true;
 $('mHome').onclick = openHome;
+const openSettings = () => { renderSpeed(); $('settings').hidden = false; };
+$('homeSettings').onclick = openSettings;
+$('mSettings').onclick = openSettings;
+$('settingsClose').onclick = () => $('settings').hidden = true;
 $('mNew').onclick = openSetup;
 $('mRules').onclick = () => { $('rules').hidden = false; };
 $('rulesClose').onclick = () => $('rules').hidden = true;
@@ -1356,7 +1368,7 @@ function showResult(){
 $('resBoard').onclick = () => { $('result').hidden = true; fitView(true); };
 $('resNew').onclick = openSetup;
 
-document.querySelectorAll('.ver').forEach(el => el.textContent = '판번호 ' + APP_VERSION);
+document.querySelectorAll('.ver').forEach(el => el.textContent = APP_VERSION);
 // ───────── 시작: 언제나 첫 화면부터 ─────────
 openHome();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
