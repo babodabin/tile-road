@@ -94,6 +94,8 @@ table.res th,table.res td{padding:7px 4px;border-bottom:1px solid var(--rule);te
 table.res th:first-child,table.res td:first-child{text-align:left}
 table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 .menu-list button{display:block;width:100%;text-align:left;height:50px;margin-bottom:8px;padding:0 16px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);font-size:16px}
+.menu-list .seg button{display:inline-block;width:auto;height:auto;margin:0;padding:5px 12px;border:0;border-radius:0;font-size:13px;background:transparent;white-space:nowrap}
+.menu-list .seg button.on{background:var(--gold);color:var(--gold-ink);font-weight:700}
 .log{font-size:13px;line-height:1.7;color:var(--ink)}
 .log div{display:flex;gap:6px;align-items:center}
 .seat{flex-wrap:wrap}
@@ -119,7 +121,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 <div id="app">
   <header class="top gut">
     <div id="chips"></div>
-    <button class="iconbtn" id="menuBtn" aria-label="메뉴">≡</button>
+    <button class="iconbtn" id="menuBtn" aria-label="설정">⚙</button>
   </header>
   <div id="wrap">
     <canvas id="board"></canvas>
@@ -167,13 +169,14 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 
 <div class="overlay" id="menu" hidden>
   <div class="sheet menu-list">
-    <h2>메뉴</h2>
+    <h2>설정</h2>
     <button id="mClose">게임으로 돌아가기</button>
     <button id="mUndo">↶ 한 수 무르기</button>
     <button id="mTiles">남은 타일 보기</button>
     <button id="mLog">점수 기록</button>
     <button id="mRules">규칙</button>
-    <button id="mSettings">설정</button>
+    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    <p class="note">판번호: <span class="ver"></span></p>
     <div id="logBox" class="log" hidden></div>
     <button id="mNew">새 게임</button>
     <button id="mHome" style="margin-top:8px">처음 화면</button>
@@ -249,7 +252,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v6 · 2026-10-27';
+const APP_VERSION = 'v7 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -1325,6 +1328,7 @@ function drawScene(){
 $('menuBtn').onclick = () => {
   $('logBox').hidden = true;
   $('mUndo').hidden = !canUndo();
+  renderSpeed();
   $('menu').hidden = false;
 };
 $('fit').onclick = () => fitView(true);
@@ -1334,7 +1338,6 @@ $('mClose').onclick = () => $('menu').hidden = true;
 $('mHome').onclick = openHome;
 const openSettings = () => { renderSpeed(); $('settings').hidden = false; };
 $('homeSettings').onclick = openSettings;
-$('mSettings').onclick = openSettings;
 $('settingsClose').onclick = () => $('settings').hidden = true;
 $('mNew').onclick = openSetup;
 $('mRules').onclick = () => { $('rules').hidden = false; };
