@@ -173,6 +173,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <button id="mRules">규칙</button>
     <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
     <div id="logBox" class="log" hidden></div>
+    <button id="mNew">새 게임</button>
     <button id="mHome" style="margin-top:8px">처음 화면</button>
     <p class="note ver" style="text-align:center"></p>
   </div>
@@ -210,6 +211,15 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
   </div>
 </div>
 
+<div class="overlay" id="ask" hidden style="z-index:30">
+  <div class="sheet" style="min-height:100%;display:flex;flex-direction:column;justify-content:center">
+    <h2 style="text-align:center">진행 중인 게임이 있어요</h2>
+    <p class="sub" style="margin-bottom:12px">새로 시작하면 지금 게임은 지워져요.</p>
+    <button class="btn primary wide" id="askYes">새로 시작</button>
+    <button class="btn wide" id="askNo">취소</button>
+  </div>
+</div>
+
 <div class="overlay" id="result" hidden>
   <div class="sheet">
     <div class="title" id="resTitle">게임 끝</div>
@@ -229,7 +239,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v2 · 2026-10-27';
+const APP_VERSION = 'v3 · 2026-10-27';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -1213,11 +1223,17 @@ $('addSeat').onclick = () => {
   renderSeats();
 };
 $('startBtn').onclick = () => {
-  if (gameInProgress() && !confirm('진행 중인 게임이 지워져요. 새로 시작할까요?')) return;
+  // 브라우저 확인창(confirm)은 아이폰 홈 화면 앱·미리보기에서 안 뜨거나 바로 닫힐 수 있어 앱 안 화면으로 묻는다
+  if (gameInProgress()){ $('ask').hidden = false; return; }
+  startNew();
+};
+$('askNo').onclick = () => $('ask').hidden = true;
+$('askYes').onclick = () => { $('ask').hidden = true; startNew(); };
+function startNew(){
   seats.forEach((s,i) => { s.name = s.name.trim() || COLORS[i].n; });
   hideAll();
   newGame(seats.map(s => ({...s})));
-};
+}
 function gameInProgress(){
   if (G) return G.phase !== 'over';
   const d = loadSave();
@@ -1306,6 +1322,7 @@ $('undo').onclick = undo;
 $('mUndo').onclick = () => { $('menu').hidden = true; undo(); };
 $('mClose').onclick = () => $('menu').hidden = true;
 $('mHome').onclick = openHome;
+$('mNew').onclick = openSetup;
 $('mRules').onclick = () => { $('rules').hidden = false; };
 $('rulesClose').onclick = () => $('rules').hidden = true;
 $('mLog').onclick = () => {
