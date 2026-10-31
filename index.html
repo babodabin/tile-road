@@ -1383,7 +1383,7 @@ function updateUI(){
   } else if (G.phase === 'meeple'){
     $('hint').textContent = meepleSel === null ? `일꾼을 올릴 곳(흰 동그라미)을 누르세요. 남은 일꾼 ${P.meeples}` : `${KIND[spots.find(s => s.fi === meepleSel).t]}에 일꾼을 올립니다.`;
     b1.textContent = '← 되돌리기';
-    b2.textContent = meepleSel === null ? '건너뛰기' : '일꾼 놓기';
+    b2.textContent = meepleSel === null ? '차례 넘기기' : '일꾼 놓기';
     b1.onclick = backToPlace;
     b2.onclick = () => finishTurn(meepleSel);
   }
