@@ -66,7 +66,6 @@ footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-t
 #info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #who{font-family:var(--display);font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hint{font-size:12px;color:var(--muted);line-height:1.3}
-#left{font-size:11px;color:var(--muted)}
 #btns{display:flex;flex-direction:column;gap:6px;flex:none}
 .btn{min-width:92px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--rule);background:var(--surface-2);font-size:14px}
 .btn.primary{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:700}
@@ -93,16 +92,65 @@ table.res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;
 table.res th,table.res td{padding:7px 4px;border-bottom:1px solid var(--rule);text-align:right}
 table.res th:first-child,table.res td:first-child{text-align:left}
 table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
-.menu-list button{display:block;width:100%;text-align:left;height:50px;margin-bottom:8px;padding:0 16px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);font-size:16px}
-.menu-list .seg button{display:inline-block;width:auto;height:auto;margin:0;padding:5px 12px;border:0;border-radius:0;font-size:13px;background:transparent;white-space:nowrap}
-.menu-list .seg button.on{background:var(--gold);color:var(--gold-ink);font-weight:700}
-.log{font-size:13px;line-height:1.7;color:var(--ink)}
-.log div{display:flex;gap:6px;align-items:center}
 .seat{flex-wrap:wrap}
 .seat .lv{flex-basis:100%;display:flex;align-items:center;gap:8px;padding-left:24px;font-size:12px;color:var(--muted)}
 .seg.small button{padding:5px 12px}
 .back{background:transparent;border:0;color:var(--muted);font-size:14px;padding:6px 0}
 .pref{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:8px 10px;margin-top:10px}
+
+/* 위 정보 줄: 남은 타일 + 마지막 점수 */
+.strip{display:flex;align-items:center;gap:8px;background:#30261c;border-bottom:1px solid var(--rule);padding-block:5px;min-height:32px}
+.strip button{background:transparent;border:0;padding:3px 0;display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;color:var(--ink)}
+#leftBtn{flex:none}
+#leftBtn b{font-size:17px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+#leftBtn small{color:var(--muted);font-size:11px}
+#lastBtn{flex:1;justify-content:flex-end;white-space:nowrap;overflow:hidden}
+#lastBtn span.t{overflow:hidden;text-overflow:ellipsis}
+#lastBtn b{color:var(--gold)}
+.chip.gain{border-color:#fff3c4;background:#7a5f34;box-shadow:0 0 0 2px #e3b75a88}
+.chip .plus{color:#ffe08a;font-size:12px;font-weight:800;margin-left:2px}
+
+/* 설정·하위 화면: 위 제목, 아래 고정 버튼 */
+.page{display:flex;flex-direction:column}
+.page .sheet{flex:1;width:100%;padding-bottom:16px}
+.ptitle{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.03em;margin:6px 0 2px}
+.psub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.back{display:inline-flex;align-items:center;gap:4px}
+.glabel{font-size:12px;color:var(--muted);letter-spacing:.08em;margin:18px 4px 6px}
+.group{background:var(--surface);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 16px;background:transparent;border:0;border-top:1px solid var(--rule);font-size:16px;text-align:left;color:var(--ink)}
+.group > .row:first-child{border-top:0}
+.row .grow{flex:1}
+.row .chev{color:var(--muted);font-size:20px}
+.row small{color:var(--muted);font-size:12px}
+.bigtile{display:flex;align-items:center;gap:14px;width:100%;padding:16px;border-radius:16px;border:1px solid #7a6040;background:linear-gradient(135deg,#5a452c,#3f3123);text-align:left;color:var(--ink)}
+.bigtile .num{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:var(--gold);min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+.bigtile .lbl{flex:1;font-size:17px;font-weight:700;line-height:1.35}
+.bigtile .lbl small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.bigtile .chev{color:var(--muted);font-size:24px}
+.dock{position:sticky;bottom:0;padding:12px max(16px,env(safe-area-inset-left,0px)) max(12px,calc(env(safe-area-inset-bottom,0px) - 10px));background:linear-gradient(to top,var(--table) 70%,#2a211900)}
+.dock .btn{display:block;width:100%;max-width:520px;margin:0 auto;height:52px;font-size:17px;border-radius:14px}
+.log .item{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--rule);font-size:15px}
+.log .item:first-child{border-top:0}
+.log .item b{margin-left:auto;color:var(--gold)}
+.log .item small{color:var(--muted)}
+
+/* 결과 */
+.rcard{background:var(--surface);border:1px solid var(--rule);border-radius:14px;margin-top:12px;overflow:hidden}
+.rcard.win{border-color:var(--gold)}
+.rhead{display:flex;align-items:center;gap:8px;padding:12px 14px;font-size:17px;font-weight:700}
+.rhead .dot{width:12px;height:12px}
+.rhead .tot{margin-left:auto;font-family:var(--display);font-weight:800;font-size:26px;color:var(--gold);font-variant-numeric:tabular-nums}
+.rrow{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:0 14px;background:transparent;border:0;border-top:1px solid var(--rule);font-size:15px;text-align:left;color:var(--ink)}
+.rrow .cnt{color:var(--muted);font-size:12px}
+.rrow .pts{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
+.rrow .chev{color:var(--muted);font-size:18px}
+.rrow.none{color:var(--muted);font-size:13px}
+#reviewBar{background:var(--surface);border-top:1px solid var(--rule);padding-top:10px;padding-bottom:max(8px, calc(env(safe-area-inset-bottom,0px) - 20px));display:flex;flex-direction:column;gap:8px}
+#reviewText{font-size:15px;line-height:1.35}
+#reviewText b{color:var(--gold)}
+#reviewBtns{display:flex;gap:8px}
+#reviewBtns .btn{flex:1;min-width:0}
 
 /* 첫 화면 */
 #home .sheet{min-height:100%;display:flex;flex-direction:column;justify-content:center}
@@ -123,6 +171,10 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <div id="chips"></div>
     <button class="iconbtn" id="menuBtn" aria-label="설정">⚙</button>
   </header>
+  <div class="strip gut" id="strip">
+    <button id="leftBtn" aria-label="남은 타일 보기"></button>
+    <button id="lastBtn" aria-label="점수 기록"></button>
+  </div>
   <div id="wrap">
     <canvas id="board"></canvas>
     <button id="fit" aria-label="전체 보기">⤢</button>
@@ -134,13 +186,20 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <div id="info">
       <div id="who"></div>
       <div id="hint"></div>
-      <div id="left"></div>
     </div>
     <div id="btns">
       <button class="btn" id="b1"></button>
       <button class="btn primary" id="b2"></button>
     </div>
   </footer>
+  <div id="reviewBar" class="gut" hidden>
+    <div id="reviewText"></div>
+    <div id="reviewBtns">
+      <button class="btn" id="revPrev">◀ 이전</button>
+      <button class="btn" id="revNext">다음 ▶</button>
+      <button class="btn primary" id="revBack">결과로</button>
+    </div>
+  </div>
 </div>
 
 <div class="overlay" id="home" hidden>
@@ -167,25 +226,45 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
   </div>
 </div>
 
-<div class="overlay" id="menu" hidden>
-  <div class="sheet menu-list">
-    <h2>설정</h2>
-    <button id="mClose">게임으로 돌아가기</button>
-    <button id="mUndo">↶ 한 수 무르기</button>
-    <button id="mTiles">남은 타일 보기</button>
-    <button id="mLog">점수 기록</button>
-    <button id="mRules">규칙</button>
-    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
-    <p class="note">판번호: <span class="ver"></span></p>
-    <div id="logBox" class="log" hidden></div>
-    <button id="mNew">새 게임</button>
-    <button id="mHome" style="margin-top:8px">처음 화면</button>
+<div class="overlay page" id="menu" hidden>
+  <div class="sheet">
+    <div class="ptitle">설정</div>
+    <p class="psub">게임을 잠깐 멈췄어요</p>
+    <button class="bigtile" id="mTiles"><span class="num" id="mTilesNum">0</span><span class="lbl">남은 타일 보기<small>종류별로 몇 장 남았는지</small></span><span class="chev">›</span></button>
+    <div class="glabel">게임</div>
+    <div class="group">
+      <button class="row" id="mLog"><span class="grow">점수 기록</span><small id="mLogCnt"></small><span class="chev">›</span></button>
+      <button class="row" id="mUndo"><span class="grow">↶ 한 수 무르기</span><small>바로 전 내 차례로</small></button>
+      <button class="row" id="mRules"><span class="grow">규칙</span><span class="chev">›</span></button>
+    </div>
+    <div class="glabel">컴퓨터</div>
+    <div class="group">
+      <div class="row"><span class="grow">두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    </div>
+    <div class="glabel">나가기</div>
+    <div class="group">
+      <button class="row" id="mNew"><span class="grow">새 게임</span><span class="chev">›</span></button>
+      <button class="row" id="mHome"><span class="grow">처음 화면</span><span class="chev">›</span></button>
+    </div>
+    <p class="note" style="text-align:center;margin-top:16px">판번호 <span class="ver"></span></p>
   </div>
+  <div class="dock"><button class="btn primary" id="mClose">게임으로 돌아가기</button></div>
 </div>
 
-<div class="overlay" id="rules" hidden>
+<div class="overlay page" id="logPage" hidden style="z-index:22">
+  <div class="sheet">
+    <button class="back subBack">‹ 설정</button>
+    <div class="ptitle">점수 기록</div>
+    <p class="psub">최근 것이 위에 있어요</p>
+    <div class="group log" id="logList"></div>
+  </div>
+  <div class="dock"><button class="btn primary subDone">게임으로 돌아가기</button></div>
+</div>
+
+<div class="overlay page" id="rules" hidden style="z-index:22">
   <div class="sheet rules">
-    <h2>규칙</h2>
+    <button class="back subBack">‹ 설정</button>
+    <div class="ptitle">규칙</div>
     <p>차례마다 타일 한 장을 뽑아 이미 놓인 타일 옆에 붙입니다. 맞닿는 변은 길은 길끼리, 성은 성끼리, 들판은 들판끼리 이어져야 합니다. 놓을 수 있는 칸은 판 위에 점선으로 보입니다.</p>
     <ul>
       <li>칸을 누르면 타일이 놓이고, 같은 칸을 다시 누르거나 <b>돌리기</b>를 누르면 맞는 방향으로 돌아갑니다. <b>놓기</b>로 확정합니다.</li>
@@ -202,26 +281,35 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
       <li>한 곳에 여러 사람의 일꾼이 있으면 가장 많이 올린 사람이 점수를 가집니다(같으면 모두).</li>
     </ul>
     <p>타일 72장이 모두 놓이면 게임이 끝납니다. 놓을 곳이 없는 타일은 버리고 다시 뽑습니다.</p>
-    <button class="btn primary wide" id="rulesClose">닫기</button>
   </div>
+  <div class="dock"><button class="btn primary subDone">게임으로 돌아가기</button></div>
 </div>
 
-<div class="overlay" id="tiles" hidden>
+<div class="overlay page" id="tiles" hidden style="z-index:22">
   <div class="sheet">
-    <h2 id="tilesTitle">남은 타일</h2>
-    <p class="note" style="margin-top:-4px;margin-bottom:12px">지금 뽑은 타일은 빼고 센 숫자예요.</p>
+    <button class="back subBack">‹ 설정</button>
+    <div class="ptitle" id="tilesTitle">남은 타일</div>
+    <p class="psub">지금 뽑은 타일은 빼고 센 숫자예요. 남은 장수 / 처음 장수</p>
     <div class="tgrid" id="tgrid"></div>
-    <button class="btn primary wide" id="tilesClose">닫기</button>
   </div>
+  <div class="dock"><button class="btn primary subDone">게임으로 돌아가기</button></div>
 </div>
 
-<div class="overlay" id="settings" hidden style="z-index:25">
+<div class="overlay page" id="settings" hidden style="z-index:25">
   <div class="sheet">
-    <h2>설정</h2>
-    <div class="pref"><span>컴퓨터 두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
-    <p class="note">판번호: <span class="ver"></span><br>아이폰에서 바뀐 게 안 보이면 이 번호부터 확인하세요. 앱을 완전히 닫았다 열면 새 버전을 받아요.</p>
-    <button class="btn primary wide" id="settingsClose">닫기</button>
+    <div class="ptitle">설정</div>
+    <p class="psub">게임 전체에 쓰이는 설정이에요</p>
+    <div class="glabel">컴퓨터</div>
+    <div class="group">
+      <div class="row"><span class="grow">두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
+    </div>
+    <div class="glabel">앱 정보</div>
+    <div class="group">
+      <div class="row"><span class="grow">판번호</span><small class="ver"></small></div>
+    </div>
+    <p class="note">아이폰에서 바뀐 게 안 보이면 판번호부터 확인하세요. 앱을 완전히 닫았다 열면 새 버전을 받아요.</p>
   </div>
+  <div class="dock"><button class="btn primary" id="settingsClose">닫기</button></div>
 </div>
 
 <div class="overlay" id="ask" hidden style="z-index:30">
@@ -233,15 +321,15 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
   </div>
 </div>
 
-<div class="overlay" id="result" hidden>
+<div class="overlay page" id="result" hidden>
   <div class="sheet">
     <div class="title" id="resTitle">게임 끝</div>
     <p class="sub" id="resSub"></p>
-    <table class="res" id="resTable"></table>
-    <p class="note">끝 점수: 미완성 길·성·수도원과 들판 점수입니다.</p>
-    <button class="btn wide" id="resBoard">판 보기</button>
-    <button class="btn primary wide" id="resNew">새 게임</button>
+    <p class="note" style="text-align:center;margin-top:-12px">줄을 누르면 판에서 그 점수를 낸 곳을 보여 줘요.</p>
+    <div id="resCards"></div>
+    <button class="btn wide" id="resBoard">판 전체 보기</button>
   </div>
+  <div class="dock"><button class="btn primary" id="resNew">새 게임</button></div>
 </div>
 
 <script>
@@ -252,7 +340,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v9 · 2026-10-27';
+const APP_VERSION = 'v10 · 2026-10-31';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -320,6 +408,7 @@ function newGame(seats){
     board: new Map([[key(0,0), {t:START_TILE, r:0, m:null}]]),
     deck, cur:0, tile:null, phase:'place', last:null, log:[], turnNo:0,
   };
+  shown = []; holdUntil = 0; aiShow = null;
   fitView(false);
   startTurn();
 }
@@ -407,11 +496,12 @@ function fieldCities(reg){
   const ids = new Map();
   for (const [x,y,a] of reg.cityNodes){
     const cr = region(x,y,a);
-    ids.set(cr.id, cr.complete);
+    if (!ids.has(cr.id)) ids.set(cr.id, cr);
   }
   let complete = 0, incomplete = 0;
-  ids.forEach(c => c ? complete++ : incomplete++);
-  return {complete, incomplete};
+  const cityKeys = new Set();
+  ids.forEach(cr => { if (cr.complete){ complete++; cr.tileKeys.forEach(k => cityKeys.add(k)); } else incomplete++; });
+  return {complete, incomplete, cityKeys:[...cityKeys]};
 }
 
 // 놓은 타일 때문에 완성된 곳 점수 매기기
@@ -443,19 +533,32 @@ function returnMeeples(list){
   list.forEach(m => { const c = G.board.get(key(m.x,m.y)); if (c.m){ c.m = null; G.players[m.p].meeples++; } });
 }
 
+// 게임 끝 점수. G.endItems에 {p, kind, pts, keys, cityKeys}로 하나씩 남겨 결과 화면에서 판 위에 보여 준다.
 function endScoring(){
   const done = new Set();
   const bd = G.players.map(() => ({R:0, C:0, K:0, F:0}));
+  G.endItems = [];
   for (const [k,c] of G.board){
     if (!c.m) continue;
     const [x,y] = k.split(',').map(Number), f = rotOf(c).feats[c.m.f];
-    if (f.t === 'K'){ bd[c.m.p].K += cloisterCount(x,y); continue; }
+    if (f.t === 'K'){
+      const pts = cloisterCount(x,y), keys = [];
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (G.board.has(key(x+dx,y+dy))) keys.push(key(x+dx,y+dy));
+      bd[c.m.p].K += pts;
+      G.endItems.push({p:c.m.p, kind:'K', pts, keys});
+      continue;
+    }
     const reg = region(x,y,c.m.f);
     if (done.has(reg.id)) continue;
     done.add(reg.id);
     const own = owners(reg.meeples);
-    if (f.t === 'F'){ const fc = fieldCities(reg); own.forEach(p => bd[p].F += fc.complete*3); }
-    else own.forEach(p => bd[p][f.t] += regionPoints(reg, true));
+    if (f.t === 'F'){
+      const fc = fieldCities(reg), pts = fc.complete*3;
+      own.forEach(p => { bd[p].F += pts; if (pts) G.endItems.push({p, kind:'F', pts, keys:reg.tileKeys, cityKeys:fc.cityKeys, cities:fc.complete}); });
+    } else {
+      const pts = regionPoints(reg, true);
+      own.forEach(p => { bd[p][f.t] += pts; G.endItems.push({p, kind:f.t, pts, keys:reg.tileKeys}); });
+    }
   }
   G.players.forEach((p,i) => { p.end = bd[i]; p.score += bd[i].R + bd[i].C + bd[i].K + bd[i].F; });
 }
@@ -536,11 +639,15 @@ function finishTurn(fi){
   }
   const events = scoreCompleted(x,y);
   events.forEach(e => {
-    G.log.push({p:e.p, pts:e.pts, kind:e.kind, turn:G.turnNo});
+    G.log.push({p:e.p, pts:e.pts, kind:e.kind, turn:G.turnNo, keys:e.keys});
     floatText(e.at, '+' + e.pts, G.players[e.p].color);
     flashRegion(e.keys, G.players[e.p].color);
   });
-  if (events.length) toast(events.map(e => `${G.players[e.p].name} ${KIND[e.kind]} +${e.pts}`).join(' · '));
+  if (events.length){
+    G.lastScore = events.map(e => ({p:e.p, pts:e.pts, kind:e.kind}));
+    toast(events.map(e => `${G.players[e.p].name} · ${KIND[e.kind]} 완성 +${e.pts}`).join('  '));
+    holdUntil = performance.now() + (prefs.speed === 'fast' ? 500 : 1600);
+  }
   G.tile = null; pending = null; meepleSel = null; spots = [];
   G.turnNo++;
   G.cur = (G.cur + 1) % G.players.length;
@@ -781,24 +888,47 @@ function posValue(ctx){
     return s;
   });
 }
+// 컴퓨터 차례는 사람이 따라볼 수 있게 단계별로 보여 준다(보통 약 2.5초, 빠르게는 짧게).
+let holdUntil = 0, aiShow = null;
 function runAI(){
   busy = true;
   updateUI();
   const fast = prefs.speed === 'fast';
+  const T = fast ? {think:60, pan:0, tile:300, meeple:0} : {think:350, pan:450, tile:1000, meeple:850};
+  const wait = Math.max(T.think, holdUntil - performance.now());
   setTimeout(() => {
-    const lv = G.players[G.cur].level;
-    const mv = lv === 'hard' ? aiHard() : aiChoose(lv === 'easy' ? 7 : 0.3);
-    pending = {x:mv.x, y:mv.y, r:mv.r};
-    ensureVisible(mv.x, mv.y);
+    const P = G.players[G.cur], who = G.cur;
+    const mv = P.level === 'hard' ? aiHard() : aiChoose(P.level === 'easy' ? 7 : 0.3);
+    panTo(mv.x, mv.y, T.pan, () => {
+      pending = {x:mv.x, y:mv.y, r:mv.r, ai:true, t0:performance.now()};
+      draw();
+      setTimeout(() => {
+        G.board.set(key(mv.x,mv.y), {t:G.tile, r:mv.r, m:null});
+        G.last = {x:mv.x, y:mv.y, p:who};
+        cands = new Map(); pending = null;
+        const done = () => { aiShow = null; busy = false; finishTurn(mv.fi); };
+        if (mv.fi === null || mv.fi === undefined){ draw(); done(); return; }
+        const f = rotOf(G.board.get(key(mv.x,mv.y))).feats[mv.fi];
+        aiShow = {x:mv.x, y:mv.y, m:f.m, lying:f.t === 'F', color:P.color, t0:performance.now()};
+        toast(`${P.name} · ${KIND[f.t]}에 일꾼`);
+        draw();
+        setTimeout(done, T.meeple);
+      }, T.tile);
+    });
+  }, wait);
+}
+// 화면을 그 칸으로 부드럽게 옮긴다(이미 잘 보이면 그대로)
+function panTo(x, y, ms, cb){
+  const [sx,sy] = toScreen(x,y), m = cam.z*0.9;
+  if (!ms || (sx > m && sx < W-m && sy > m && sy < H-m)){ if (!ms) ensureVisible(x,y); cb(); return; }
+  const x0 = cam.x, y0 = cam.y, t0 = performance.now();
+  const step = () => {
+    const k = Math.min(1, (performance.now()-t0)/ms), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
+    cam.x = x0 + (x-x0)*e; cam.y = y0 + (y-y0)*e;
     draw();
-    setTimeout(() => {
-      G.board.set(key(mv.x,mv.y), {t:G.tile, r:mv.r, m:null});
-      G.last = {x:mv.x, y:mv.y, p:G.cur};
-      cands = new Map(); pending = null;
-      busy = false;
-      finishTurn(mv.fi);
-    }, fast ? 250 : 750);
-  }, fast ? 60 : 400);
+    if (k < 1) requestAnimationFrame(step); else cb();
+  };
+  requestAnimationFrame(step);
 }
 
 // ───────── 저장 ─────────
@@ -825,6 +955,7 @@ function loadSave(){
 }
 function resume(d){
   G = d;
+  shown = []; holdUntil = 0; aiShow = null;
   fitView(false);
   if (G.phase === 'over'){ updateUI(); draw(); showResult(); return; }
   // 차례 시작 때 저장하므로, 뽑아 둔 타일을 다시 덱 위에 올리고 그 차례부터 다시 한다
@@ -1021,15 +1152,34 @@ function render(){
     ctx.strokeStyle = G.players[G.last.p].color; ctx.lineWidth = 3;
     ctx.strokeRect(sx-z/2+1.5, sy-z/2+1.5, z-3, z-3);
   }
+  let busyAnim = false;
   if (pending && G.tile !== null){
-    drawTile(pending.x, pending.y, G.tile, pending.r, .92);
     const [sx,sy] = toScreen(pending.x,pending.y);
-    ctx.strokeStyle = '#e3b75a'; ctx.lineWidth = 3; ctx.strokeRect(sx-z/2+1.5, sy-z/2+1.5, z-3, z-3);
+    if (pending.ai){
+      // 컴퓨터가 고른 자리: 그 사람 색 테두리가 깜빡이며 타일이 나타난다
+      const t = (performance.now() - pending.t0)/1000, pulse = 0.5 + 0.5*Math.sin(t*Math.PI*4);
+      drawTile(pending.x, pending.y, G.tile, pending.r, Math.min(1, .35 + t*1.5));
+      const col = G.players[G.cur].color;
+      ctx.strokeStyle = col === '#2b2b2b' ? '#f3e9d2' : col; ctx.lineWidth = 3 + 3*pulse;
+      ctx.strokeRect(sx-z/2-2, sy-z/2-2, z+4, z+4);
+      busyAnim = true;
+    } else {
+      drawTile(pending.x, pending.y, G.tile, pending.r, .92);
+      ctx.strokeStyle = '#e3b75a'; ctx.lineWidth = 3; ctx.strokeRect(sx-z/2+1.5, sy-z/2+1.5, z-3, z-3);
+    }
   }
-  const nowF = performance.now();
-  flashes = flashes.filter(f => nowF - f.t0 < 1800);
+  // 결과 복기: 고른 점수의 영역만 밝게
+  if (review){
+    ctx.fillStyle = '#000000a8';
+    for (const k of G.board.keys()) if (!review.keys.has(k) && !review.city.has(k)){ const [x,y] = k.split(',').map(Number), [sx,sy] = toScreen(x,y); ctx.fillRect(sx-z/2, sy-z/2, z, z); }
+    const col = review.color === '#2b2b2b' ? '#f3e9d2' : review.color;
+    for (const k of review.city) if (!review.keys.has(k)){ const [x,y] = k.split(',').map(Number), [sx,sy] = toScreen(x,y); ctx.setLineDash([6,4]); ctx.strokeStyle = '#ffe9b0'; ctx.lineWidth = 2; ctx.strokeRect(sx-z/2+2, sy-z/2+2, z-4, z-4); ctx.setLineDash([]); }
+    for (const k of review.keys){ const [x,y] = k.split(',').map(Number), [sx,sy] = toScreen(x,y); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.strokeRect(sx-z/2+1.5, sy-z/2+1.5, z-3, z-3); }
+  }
+  const nowF = performance.now(), FL = 2600;
+  flashes = flashes.filter(f => nowF - f.t0 < FL);
   for (const f of flashes){
-    const k = (nowF - f.t0)/1800, a = (0.5 + 0.5*Math.sin(k*Math.PI*6)) * (1-k);
+    const k = (nowF - f.t0)/FL, a = (0.5 + 0.5*Math.sin(k*Math.PI*7)) * (1-k);
     ctx.globalAlpha = 0.55*a; ctx.fillStyle = f.color === '#2b2b2b' ? '#ffffff' : f.color;
     for (const fk of f.keys){ const [x,y] = fk.split(',').map(Number), [sx,sy] = toScreen(x,y); ctx.fillRect(sx-z/2, sy-z/2, z, z); }
     ctx.globalAlpha = 1;
@@ -1038,7 +1188,9 @@ function render(){
     if (!c.m) continue;
     const [x,y] = k.split(',').map(Number), f = rotOf(c).feats[c.m.f];
     const [sx,sy] = toScreen(x-.5+f.m[0], y-.5+f.m[1]);
+    if (review && !review.keys.has(k)) ctx.globalAlpha = .3; // 복기 중엔 다른 곳 일꾼은 흐리게
     drawMeeple(ctx, sx, sy, z*.3, G.players[c.m.p].color, f.t === 'F');
+    ctx.globalAlpha = 1;
   }
   if (G.phase === 'meeple' && !G.players[G.cur].ai){
     const {x,y} = G.last;
@@ -1048,6 +1200,14 @@ function render(){
       ctx.beginPath(); ctx.arc(sx, sy, Math.max(9, z*.09), 0, Math.PI*2);
       ctx.fillStyle = '#ffffffb0'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = G.players[G.cur].color; ctx.stroke();
     }
+  }
+  if (aiShow){
+    // 컴퓨터가 올린 일꾼: 고리가 퍼지며 깜빡인다
+    const t = (performance.now() - aiShow.t0)/1000, [sx,sy] = toScreen(aiShow.x-.5+aiShow.m[0], aiShow.y-.5+aiShow.m[1]);
+    ctx.beginPath(); ctx.arc(sx, sy, z*(.16 + .1*((t*2)%1)), 0, Math.PI*2);
+    ctx.lineWidth = 3; ctx.strokeStyle = '#fff3c4'; ctx.globalAlpha = 1 - (t*2)%1; ctx.stroke(); ctx.globalAlpha = 1;
+    drawMeeple(ctx, sx, sy, z*.3, aiShow.color, aiShow.lying);
+    busyAnim = true;
   }
   const now = performance.now();
   anims = anims.filter(a => now - a.t0 < 1400);
@@ -1059,7 +1219,7 @@ function render(){
     ctx.strokeText(a.text, sx, sy - k*40); ctx.fillStyle = a.color === '#2b2b2b' ? '#f3e9d2' : a.color; ctx.fillText(a.text, sx, sy - k*40);
     ctx.globalAlpha = 1;
   }
-  if (anims.length || flashes.length) draw();
+  if (anims.length || flashes.length || busyAnim) draw();
 }
 function floatText(at, text, color){ anims.push({at, text, color, t0:performance.now()}); draw(); }
 function flashRegion(keys, color){ if (keys) { flashes.push({keys, color, t0:performance.now()}); draw(); } }
@@ -1141,14 +1301,42 @@ function nextRot(rs, r){ for (let i = 1; i <= 4; i++){ const n = (r+i)%4; if (rs
 // ───────── 화면 글자·버튼 ─────────
 const $ = id => document.getElementById(id);
 const pv = $('preview'), pctx = pv.getContext('2d');
+// 점수 칸에 보이는 점수: 실제 점수까지 1점씩 천천히 올라가며, 오르는 동안 칸이 밝게 빛난다
+let shown = [], scoreTimer = 0;
+function renderChips(){
+  const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
+  if (shown.length !== G.players.length) shown = G.players.map(p => p.score);
+  $('chips').innerHTML = G.players.map((p,i) => {
+    const gain = p.score - shown[i];
+    return `
+    <div class="chip ${i === G.cur && G.phase !== 'over' ? 'on' : ''} ${gain > 0 ? 'gain' : ''}">
+      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--gold)">${({easy:'하',mid:'중',hard:'상'})[p.level] || ''}</small>` : ''}</div>
+      <div class="sc"><b>${shown[i]}${gain > 0 ? `<span class="plus">+${gain}</span>` : ''}</b><small>일꾼 ${p.meeples}</small></div>
+    </div>`; }).join('');
+  if (G.players.some((p,i) => p.score > shown[i]) && !scoreTimer){
+    scoreTimer = setInterval(() => {
+      if (!G){ clearInterval(scoreTimer); scoreTimer = 0; return; }
+      let more = false;
+      G.players.forEach((p,i) => { if (shown[i] < p.score){ shown[i]++; more = more || shown[i] < p.score; } else if (shown[i] > p.score) shown[i] = p.score; });
+      if (!more){ clearInterval(scoreTimer); scoreTimer = 0; setTimeout(() => G && renderChips(), 700); }
+      renderChips();
+    }, prefs.speed === 'fast' ? 40 : 110);
+  }
+  G.players.forEach((p,i) => { if (shown[i] > p.score) shown[i] = p.score; });
+}
+function renderStrip(){
+  const left = G.deck.length, same = G.tile !== null ? G.deck.filter(t => t === G.tile).length : null;
+  $('leftBtn').innerHTML = G.phase === 'over' ? '<span>모든 타일을 놓았어요</span>'
+    : `<span>남은 타일</span><b>${left}</b><span>장</span>${same !== null && G.phase !== 'meeple' ? `<small>· 같은 모양 ${same}장 더</small>` : ''}`;
+  const L = G.lastScore;
+  $('lastBtn').innerHTML = L && L.length
+    ? `<span class="t">마지막 점수 ${L.map(e => `<span class="dot" style="display:inline-block;background:${G.players[e.p].color};vertical-align:middle"></span> ${esc(G.players[e.p].name)} ${KIND[e.kind]} <b>+${e.pts}</b>`).join(' ')}</span>`
+    : '<span class="t" style="color:var(--muted)">아직 점수 난 곳 없음</span>';
+}
 function updateUI(){
   if (!G) return;
-  const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
-  $('chips').innerHTML = G.players.map((p,i) => `
-    <div class="chip ${i === G.cur && G.phase !== 'over' ? 'on' : ''}">
-      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--gold)">${({easy:'하',mid:'중',hard:'상'})[p.level] || ''}</small>` : ''}</div>
-      <div class="sc"><b>${p.score}</b><small>일꾼 ${p.meeples}</small></div>
-    </div>`).join('');
+  renderChips();
+  renderStrip();
   const P = G.players[G.cur], b1 = $('b1'), b2 = $('b2');
   pctx.setTransform(1,0,0,1,0,0); pctx.clearRect(0,0,144,144);
   if (G.tile !== null && G.phase === 'place'){
@@ -1157,7 +1345,6 @@ function updateUI(){
   } else if (G.phase === 'meeple'){
     drawMeeple(pctx, 72, 76, 80, P.color, false);
   }
-  $('left').textContent = G.phase === 'over' ? '모든 타일을 놓았어요' : `남은 타일 ${G.deck.length}장`;
   b1.hidden = b2.hidden = false; b1.disabled = b2.disabled = false;
   if (G.phase === 'over'){
     $('who').textContent = '게임 끝';
@@ -1273,7 +1460,7 @@ function openSetup(){
   renderSeats(); renderSpeed();
   hideAll(); $('setup').hidden = false;
 }
-function hideAll(){ ['home','setup','menu','rules','result','tiles','settings'].forEach(id => $(id).hidden = true); }
+function hideAll(){ ['home','setup','menu','rules','result','tiles','settings','logPage'].forEach(id => $(id).hidden = true); endReview(); }
 
 // ───────── 첫 화면 ─────────
 function openHome(){
@@ -1290,7 +1477,7 @@ $('resumeBtn').onclick = () => {
 };
 $('homeNew').onclick = openSetup;
 $('setupBack').onclick = openHome;
-$('rulesBtn0').onclick = () => { $('rules').hidden = false; };
+$('rulesBtn0').onclick = () => openSub('rules', false);
 // 첫 화면 그림: 규칙에 맞게 이어 붙인 타일 4×3장
 let sceneDone = false;
 function drawScene(){
@@ -1336,12 +1523,33 @@ function drawScene(){
 }
 
 // ───────── 메뉴·결과 ─────────
-$('menuBtn').onclick = () => {
-  $('logBox').hidden = true;
+function openMenu(){
+  if (!G) return;
   $('mUndo').hidden = !canUndo();
+  $('mTilesNum').textContent = G.deck.length;
+  $('mLogCnt').textContent = G.log.length ? `${G.log.length}번` : '';
   renderSpeed();
   $('menu').hidden = false;
-};
+}
+$('menuBtn').onclick = openMenu;
+// 하위 화면(남은 타일·점수 기록·규칙): 위 "‹ 설정"은 설정으로, 아래 버튼은 곧장 게임으로
+let subFromMenu = false;
+function openSub(id, fromMenu){
+  subFromMenu = fromMenu;
+  const page = $(id), inGame = G && G.phase !== 'over' && fromMenu;
+  page.querySelectorAll('.subBack').forEach(b => b.hidden = !fromMenu);
+  page.querySelectorAll('.subDone').forEach(b => b.textContent = inGame ? '게임으로 돌아가기' : '닫기');
+  page.hidden = false;
+  page.scrollTop = 0;
+}
+const SUBS = ['tiles','logPage','rules'];
+document.querySelectorAll('.subBack').forEach(b => b.onclick = () => SUBS.forEach(id => $(id).hidden = true));
+document.querySelectorAll('.subDone').forEach(b => b.onclick = () => {
+  SUBS.forEach(id => $(id).hidden = true);
+  if (subFromMenu) $('menu').hidden = true;
+});
+$('leftBtn').onclick = () => { if (G && G.phase !== 'over') { showTiles(); openSub('tiles', false); $('tiles').querySelector('.subDone').textContent = '게임으로 돌아가기'; } };
+$('lastBtn').onclick = () => { if (G){ showLog(); openSub('logPage', false); $('logPage').querySelector('.subDone').textContent = G.phase === 'over' ? '닫기' : '게임으로 돌아가기'; } };
 $('fit').onclick = () => fitView(true);
 $('undo').onclick = undo;
 $('mUndo').onclick = () => { $('menu').hidden = true; undo(); };
@@ -1351,36 +1559,88 @@ const openSettings = () => { renderSpeed(); $('settings').hidden = false; };
 $('homeSettings').onclick = openSettings;
 $('settingsClose').onclick = () => $('settings').hidden = true;
 $('mNew').onclick = openSetup;
-$('mRules').onclick = () => { $('rules').hidden = false; };
-$('rulesClose').onclick = () => $('rules').hidden = true;
-$('mLog').onclick = () => {
-  const box = $('logBox');
-  box.innerHTML = G && G.log.length
-    ? G.log.slice().reverse().map(l => `<div><span class="dot" style="background:${G.players[l.p].color}"></span>${esc(G.players[l.p].name)} · ${KIND[l.kind]} 완성 <b>+${l.pts}</b></div>`).join('')
-    : '<div>아직 완성된 곳이 없어요.</div>';
-  box.hidden = false;
-};
+$('mRules').onclick = () => openSub('rules', true);
+function showLog(){
+  $('logList').innerHTML = G && G.log.length
+    ? G.log.slice().reverse().map(l => `<div class="item"><span class="dot" style="background:${G.players[l.p].color}"></span>${esc(G.players[l.p].name)} <small>· ${KIND[l.kind]} 완성</small><b>+${l.pts}</b></div>`).join('')
+    : '<div class="item"><small>아직 완성된 곳이 없어요.</small></div>';
+}
+$('mLog').onclick = () => { showLog(); openSub('logPage', true); };
 const TILE_URL = TILE_IMG.map(cv => cv.toDataURL());
-$('mTiles').onclick = () => {
+function showTiles(){
   const counts = TILES.map(() => 0);
   if (G) G.deck.forEach(t => counts[t]++);
   $('tilesTitle').textContent = `남은 타일 ${G ? G.deck.length : 0}장`;
   $('tgrid').innerHTML = TILES.map((t,i) => `<div class="${counts[i] ? '' : 'zero'}"><img src="${TILE_URL[i]}" alt=""><span>${counts[i]} / ${t.n - (i === START_TILE ? 1 : 0)}</span></div>`).join('');
-  $('tiles').hidden = false;
-};
-$('tilesClose').onclick = () => $('tiles').hidden = true;
+}
+$('mTiles').onclick = () => { showTiles(); openSub('tiles', true); };
+// 점수 종류: 게임 중 완성(C·R·K)과 게임 끝(미완성·들판)
+const RES_CATS = [
+  {id:'C', label:'성 완성', from:'log'}, {id:'R', label:'길 완성', from:'log'}, {id:'K', label:'수도원 완성', from:'log'},
+  {id:'C', label:'게임 끝 · 미완성 성', from:'end'}, {id:'R', label:'게임 끝 · 미완성 길', from:'end'}, {id:'K', label:'게임 끝 · 미완성 수도원', from:'end'},
+  {id:'F', label:'들판', from:'end'},
+];
+function resItems(pi, cat){
+  const src = cat.from === 'log' ? G.log : (G.endItems || []);
+  return src.filter(e => e.p === pi && e.kind === cat.id);
+}
 function showResult(){
   const ps = G.players.map((p,i) => ({...p, i})).sort((a,b) => b.score - a.score);
   const top = ps[0].score, winners = ps.filter(p => p.score === top);
   $('resTitle').textContent = winners.length > 1 ? '공동 우승' : `${winners[0].name} 우승`;
   $('resSub').textContent = `${G.turnNo}차례 · 타일 ${G.board.size}장`;
-  $('resTable').innerHTML = '<tr><th>이름</th><th>게임 중</th><th>길</th><th>성</th><th>수도원</th><th>들판</th><th>합계</th></tr>' +
-    ps.map(p => {
-      const e = p.end || {R:0,C:0,K:0,F:0}, endSum = e.R+e.C+e.K+e.F;
-      return `<tr><td><span class="dot" style="display:inline-block;background:${p.color};margin-right:5px"></span>${esc(p.name)}</td><td>${p.score-endSum}</td><td>${e.R}</td><td>${e.C}</td><td>${e.K}</td><td>${e.F}</td><td class="tot">${p.score}</td></tr>`;
+  $('resCards').innerHTML = ps.map(p => {
+    const rows = RES_CATS.map((cat, ci) => {
+      const items = resItems(p.i, cat);
+      if (!items.length) return '';
+      const pts = items.reduce((a,e) => a + e.pts, 0), extra = cat.id === 'F' ? ` · 완성된 성 ${items.reduce((a,e) => a + (e.cities || 0), 0)}개` : '';
+      return `<button class="rrow" data-p="${p.i}" data-c="${ci}"><span>${cat.label}</span><span class="cnt">${items.length}곳${extra}</span><span class="pts">${pts}점</span><span class="chev">›</span></button>`;
     }).join('');
+    return `<div class="rcard ${p.score === top ? 'win' : ''}"><div class="rhead"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<span class="tot">${p.score}</span></div>${rows || '<div class="rrow none">점수를 낸 곳이 없어요</div>'}</div>`;
+  }).join('');
+  $('resCards').querySelectorAll('.rrow[data-p]').forEach(b => b.onclick = () => startReview(+b.dataset.p, +b.dataset.c));
   $('result').hidden = false;
 }
+// 복기: 결과 한 줄을 누르면 판에서 그 점수의 영역만 밝게 보여 준다. idx -1 = 전체, 0.. = 한 곳씩
+let review = null, revState = null;
+function startReview(pi, ci){
+  const items = resItems(pi, RES_CATS[ci]);
+  revState = {pi, ci, items, idx:-1};
+  $('result').hidden = true;
+  showReviewStep();
+}
+function showReviewStep(){
+  const {pi, ci, items, idx} = revState, P = G.players[pi], cat = RES_CATS[ci];
+  const pick = idx < 0 ? items : [items[idx]];
+  const keys = new Set(), city = new Set();
+  pick.forEach(e => { (e.keys || []).forEach(k => keys.add(k)); (e.cityKeys || []).forEach(k => city.add(k)); });
+  review = {keys, city, color:P.color};
+  const pts = pick.reduce((a,e) => a + e.pts, 0);
+  $('reviewText').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} · ${cat.label} <b>${pts}점</b> — ${idx < 0 ? `전체 ${items.length}곳` : `${idx+1} / ${items.length}곳`}${cat.id === 'F' ? '<br><small style="color:var(--muted)">점선 칸은 이 들판에 닿은 완성된 성이에요</small>' : ''}`;
+  $('revPrev').disabled = items.length < 2; $('revNext').disabled = items.length < 2;
+  document.querySelector('footer.tray').hidden = true;
+  $('reviewBar').hidden = false;
+  fitKeys([...keys, ...city]);
+  draw();
+}
+function fitKeys(list){
+  if (!list.length) return;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  list.forEach(k => { const [x,y] = k.split(',').map(Number); x0 = Math.min(x0,x); x1 = Math.max(x1,x); y0 = Math.min(y0,y); y1 = Math.max(y1,y); });
+  syncSize();
+  cam.x = (x0+x1)/2; cam.y = (y0+y1)/2;
+  cam.z = Math.max(24, Math.min(Math.min(W, H*1.2)/3, Math.min(W/(x1-x0+2), H/(y1-y0+2))));
+}
+function endReview(){
+  if (!review && !revState) return;
+  review = null; revState = null;
+  $('reviewBar').hidden = true;
+  document.querySelector('footer.tray').hidden = false;
+  draw();
+}
+$('revPrev').onclick = () => { const n = revState.items.length; revState.idx = revState.idx <= -1 ? n-1 : revState.idx - 1; showReviewStep(); };
+$('revNext').onclick = () => { const n = revState.items.length; revState.idx = revState.idx >= n-1 ? -1 : revState.idx + 1; showReviewStep(); };
+$('revBack').onclick = () => { endReview(); showResult(); };
 $('resBoard').onclick = () => { $('result').hidden = true; fitView(true); };
 $('resNew').onclick = openSetup;
 
