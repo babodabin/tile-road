@@ -51,7 +51,8 @@ header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding
 .dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 1px #0006}
 .chip .sc{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
 .chip .sc b{font-size:19px;font-weight:800}
-.chip .sc small{font-size:11px;color:#e6d8b8;font-weight:700}
+.chip .sc .mp{display:flex;align-items:center;gap:3px;font-size:17px;font-weight:800;color:#fff8e8}
+.chip .sc .mp svg{width:15px;height:15px;flex:none}
 .iconbtn{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--rule);background:var(--surface-2);font-size:18px;display:grid;place-items:center}
 
 #wrap{position:relative;flex:1;min-height:0;overflow:hidden}
@@ -142,6 +143,9 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 .rhead .dot{width:12px;height:12px}
 .rhead .tot{margin-left:auto;font-family:var(--display);font-weight:800;font-size:26px;color:var(--gold);font-variant-numeric:tabular-nums}
 .rrow{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:0 14px;background:transparent;border:0;border-top:1px solid var(--rule);font-size:15px;text-align:left;color:var(--ink)}
+.rrow{padding-block:8px}
+.rrow .lbl{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
+.rrow .lbl small{flex-basis:100%;color:#cdb88f;font-size:12px;margin-top:2px}
 .rrow .cnt{color:var(--muted);font-size:12px}
 .rrow .pts{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
 .rrow .chev{color:var(--muted);font-size:18px}
@@ -237,10 +241,6 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
       <button class="row" id="mUndo"><span class="grow">↶ 한 수 무르기</span><small>바로 전 내 차례로</small></button>
       <button class="row" id="mRules"><span class="grow">규칙</span><span class="chev">›</span></button>
     </div>
-    <div class="glabel">컴퓨터</div>
-    <div class="group">
-      <div class="row"><span class="grow">두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
-    </div>
     <div class="glabel">나가기</div>
     <div class="group">
       <button class="row" id="mNew"><span class="grow">새 게임</span><span class="chev">›</span></button>
@@ -298,11 +298,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 <div class="overlay page" id="settings" hidden style="z-index:25">
   <div class="sheet">
     <div class="ptitle">설정</div>
-    <p class="psub">게임 전체에 쓰이는 설정이에요</p>
-    <div class="glabel">컴퓨터</div>
-    <div class="group">
-      <div class="row"><span class="grow">두는 속도</span><div class="seg small speedSeg"><button data-speed="normal">보통</button><button data-speed="fast">빠르게</button></div></div>
-    </div>
+    <p class="psub">앱 정보</p>
     <div class="glabel">앱 정보</div>
     <div class="group">
       <div class="row"><span class="grow">판번호</span><small class="ver"></small></div>
@@ -340,7 +336,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v10 · 2026-10-31';
+const APP_VERSION = 'v11 · 2026-10-31';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -730,11 +726,13 @@ function aiChoose(noise){
 // 내 예상 점수 − 상대 예상 점수가 가장 큰 수를 고른다. 막기·끼어들기도 이 평가로 자연스럽게 나온다.
 // reply=true면 좋은 수 몇 개를 골라 다음 사람의 받아치기까지 살펴본다(느리고, 시험해 보니 더 세지지 않아 꺼 둠).
 const AIP = {opp:1, reply:false, topK:6, samples:8};
+
 const relValue = (V, pi) => {
   const others = V.filter((_,i) => i !== pi);
   return V[pi] - AIP.opp*(Math.max(...others)*0.6 + others.reduce((a,b) => a+b, 0)/others.length*0.4);
 };
-function aiHard(){
+// deep: {K, S} — 좋은 수 K개를 골라, 다음 사람이 남은 타일 S장으로 (상 수준으로) 받아치는 경우까지 평균 낸다(최상).
+function aiHard(deep){
   const pi = G.cur, me = G.players[pi], t = G.tile;
   const counts = Array(TILES.length).fill(0);
   G.deck.forEach(d => counts[d]++);
@@ -756,9 +754,9 @@ function aiHard(){
     }
   }
   moves.sort((a,b) => b.v - a.v);
-  if (!AIP.reply || G.deck.length < 2) return moves[0];
+  if (!(deep || AIP.reply) || G.deck.length < 2) return moves[0];
   // 2단계: 좋은 수 몇 개만, 다음 사람이 남은 타일 중 하나를 뽑아 가장 좋게 받아치는 경우를 여러 번 해 보고 평균
-  const opp = (pi + 1) % G.players.length, K = Math.min(AIP.topK, moves.length), S = AIP.samples;
+  const opp = (pi + 1) % G.players.length, K = Math.min(deep ? deep.K : AIP.topK, moves.length), S = deep ? deep.S : AIP.samples;
   const saveCands = cands, saveTile = G.tile, saveCur = G.cur;
   let best = null;
   for (let i = 0; i < K; i++){
@@ -770,7 +768,7 @@ function aiHard(){
       const c2 = candidatesFor(t2);
       if (!c2.size) continue;
       cands = c2; G.tile = t2; G.cur = opp;
-      const rep = aiChoose(0);
+      const rep = deep ? aiHard() : aiChoose(0);
       const undoRep = applyMove(rep.x, rep.y, t2, rep.r, rep.fi, opp);
       ctx.counts[t2]--; ctx.D--;
       sum += relValue(posValue(ctx), pi); n++;
@@ -877,7 +875,11 @@ function posFeatures(ctx){
 // 특징 → 앞으로 더 얻을 점수 예상. 각 특징은 그대로 한 번, 남은 판 비율(τ)을 곱해 한 번 더 들어간다.
 function featVec(f, tau){ const v = [1, tau]; for (const x of f) v.push(x, x*tau); return v; }
 // 2인 중-중 대결 400판으로 학습(2026-10-26). 이 가중치로 상이 중을 약 85% 이김.
-const AIW = [0.7514,61.4401,1.0049,-0.4039,0.4004,2.1562,-2.177,2.5244,0.9131,0.6999,-1.8302,2.5985,0.8081,0.1754,-0.5486,1.5924,0.9643,-1.0128,0.4755,0.0972,-0.0036,0.7198,-0.5123,11.5265,-1.6442,4.468,-0.9254,0.5931,-1.0462,0.6077,2.3949,2.1622,0,0,3.2227,-0.5665];
+let AIW = [0.7514,61.4401,1.0049,-0.4039,0.4004,2.1562,-2.177,2.5244,0.9131,0.6999,-1.8302,2.5985,0.8081,0.1754,-0.5486,1.5924,0.9643,-1.0128,0.4755,0.0972,-0.0036,0.7198,-0.5123,11.5265,-1.6442,4.468,-0.9254,0.5931,-1.0462,0.6077,2.3949,2.1622,0,0,3.2227,-0.5665];
+// 최상: 같은 방식에 더 많은 판(중-중 1500판)으로 학습한 가중치(2026-10-31). 상과 붙이면 96판 중 54승(평균 +2.5점) — 조금 더 셈.
+// (상대 받아치기까지 내다보기·상끼리 둔 판으로 학습은 시험해 보니 오히려 약하거나 같아서 쓰지 않음)
+const AIW_X = [0.9492,53.1852,0.9967,-0.1742,0.6612,1.827,-3.197,3.4505,0.8927,0.5754,-1.198,1.8906,0.7612,0.3004,-0.3715,1.5502,0.903,-0.6583,0.5538,0.1745,0.0183,0.6137,1.4641,10.4768,-0.2108,4.3575,-0.074,1.7433,-0.5646,1.5935,0.8405,4.1044,0,0,3.1352,0.0932];
+function withWeights(w, fn){ const keep = AIW; AIW = w; try { return fn(); } finally { AIW = keep; } }
 function posValue(ctx){
   const F = posFeatures(ctx), tau = ctx.D / 71;
   return G.players.map((p,i) => {
@@ -898,7 +900,7 @@ function runAI(){
   const wait = Math.max(T.think, holdUntil - performance.now());
   setTimeout(() => {
     const P = G.players[G.cur], who = G.cur;
-    const mv = P.level === 'hard' ? aiHard() : aiChoose(P.level === 'easy' ? 7 : 0.3);
+    const mv = P.level === 'xhard' ? withWeights(AIW_X, aiHard) : P.level === 'hard' ? aiHard() : aiChoose(P.level === 'easy' ? 7 : 0.3);
     panTo(mv.x, mv.y, T.pan, () => {
       pending = {x:mv.x, y:mv.y, r:mv.r, ai:true, t0:performance.now()};
       draw();
@@ -922,13 +924,17 @@ function panTo(x, y, ms, cb){
   const [sx,sy] = toScreen(x,y), m = cam.z*0.9;
   if (!ms || (sx > m && sx < W-m && sy > m && sy < H-m)){ if (!ms) ensureVisible(x,y); cb(); return; }
   const x0 = cam.x, y0 = cam.y, t0 = performance.now();
+  let done = false;
+  const finish = () => { if (done) return; done = true; cam.x = x; cam.y = y; draw(); cb(); };
   const step = () => {
+    if (done) return;
     const k = Math.min(1, (performance.now()-t0)/ms), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
     cam.x = x0 + (x-x0)*e; cam.y = y0 + (y-y0)*e;
     draw();
-    if (k < 1) requestAnimationFrame(step); else cb();
+    if (k < 1) requestAnimationFrame(step); else finish();
   };
   requestAnimationFrame(step);
+  setTimeout(finish, ms + 200); // 화면이 가려져 그리기가 멈춰도 차례는 끝까지 진행
 }
 
 // ───────── 저장 ─────────
@@ -1303,6 +1309,8 @@ const $ = id => document.getElementById(id);
 const pv = $('preview'), pctx = pv.getContext('2d');
 // 점수 칸에 보이는 점수: 실제 점수까지 1점씩 천천히 올라가며, 오르는 동안 칸이 밝게 빛난다
 let shown = [], scoreTimer = 0;
+// 점수 칸의 작은 일꾼 그림(그 사람 색)
+const meepleIcon = color => `<svg viewBox="-0.55 -0.55 1.1 1.1" aria-hidden="true"><path d="M-.11-.2Q-.5-.16-.48 0L-.2.05-.38.45H-.12L0 .24.12.45H.38L.2.05.48 0Q.5-.16.11-.2Z M.15-.33A.15.15 0 1 1-.15-.33.15.15 0 1 1 .15-.33Z" fill="${color}" stroke="${color === '#2b2b2b' ? '#e8dcc0' : '#1a120b'}" stroke-width=".08" stroke-linejoin="round"/></svg>`;
 function renderChips(){
   const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
   if (shown.length !== G.players.length) shown = G.players.map(p => p.score);
@@ -1310,8 +1318,8 @@ function renderChips(){
     const gain = p.score - shown[i];
     return `
     <div class="chip ${i === G.cur && G.phase !== 'over' ? 'on' : ''} ${gain > 0 ? 'gain' : ''}">
-      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--gold)">${({easy:'하',mid:'중',hard:'상'})[p.level] || ''}</small>` : ''}</div>
-      <div class="sc"><b>${shown[i]}${gain > 0 ? `<span class="plus">+${gain}</span>` : ''}</b><small>일꾼 ${p.meeples}</small></div>
+      <div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(crowd ? p.name.replace(/^컴퓨터 ?(\d)/, '컴$1') : p.name)}${p.ai ? ` <small style="color:var(--gold)">${({easy:'하',mid:'중',hard:'상',xhard:'최상'})[p.level] || ''}</small>` : ''}</div>
+      <div class="sc"><b>${shown[i]}${gain > 0 ? `<span class="plus">+${gain}</span>` : ''}</b><span class="mp" title="남은 일꾼">${meepleIcon(p.color)}${p.meeples}</span></div>
     </div>`; }).join('');
   if (G.players.some((p,i) => p.score > shown[i]) && !scoreTimer){
     scoreTimer = setInterval(() => {
@@ -1388,20 +1396,12 @@ function toast(msg){
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hide'), 2600);
 }
 
-// ───────── 설정(컴퓨터 속도) ─────────
-const PREFS_KEY = 'tileroad-prefs';
-let prefs = {speed:'normal'};
-try { prefs = {...prefs, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')}; } catch(e){}
-function renderSpeed(){ document.querySelectorAll('.speedSeg button').forEach(b => b.classList.toggle('on', b.dataset.speed === prefs.speed)); }
-document.querySelectorAll('.speedSeg button').forEach(b => b.onclick = () => {
-  prefs.speed = b.dataset.speed;
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch(e){}
-  renderSpeed();
-});
-renderSpeed();
+// ───────── 컴퓨터 속도 ─────────
+// 설정 화면에서는 뺐다(v11, 사용자 요청) — 늘 보통. 'fast'는 테스트 도구가 연출 없이 돌릴 때만 쓴다.
+const prefs = {speed:'normal'};
 
 // ───────── 자리 정하기 ─────────
-const LEVELS = [['easy','하'],['mid','중'],['hard','상']];
+const LEVELS = [['easy','하'],['mid','중'],['hard','상'],['xhard','최상']];
 let seats = [];
 function defaultSeats(){ return [{name:'나', color:COLORS[0].c, ai:false, level:'hard'}, {name:'컴퓨터 1', color:COLORS[1].c, ai:true, level:'hard'}]; }
 function renderSeats(){
@@ -1457,7 +1457,7 @@ function openSetup(){
     seats = G.players.map((p,i) => i === 0 ? {name:'나', color:COLORS[0].c, ai:false, level:'hard'}
       : {name:'컴퓨터 ' + i, color:COLORS[i].c, ai:true, level:p.ai ? (p.level || 'hard') : 'hard'});
   }
-  renderSeats(); renderSpeed();
+  renderSeats();
   hideAll(); $('setup').hidden = false;
 }
 function hideAll(){ ['home','setup','menu','rules','result','tiles','settings','logPage'].forEach(id => $(id).hidden = true); endReview(); }
@@ -1528,7 +1528,6 @@ function openMenu(){
   $('mUndo').hidden = !canUndo();
   $('mTilesNum').textContent = G.deck.length;
   $('mLogCnt').textContent = G.log.length ? `${G.log.length}번` : '';
-  renderSpeed();
   $('menu').hidden = false;
 }
 $('menuBtn').onclick = openMenu;
@@ -1555,7 +1554,7 @@ $('undo').onclick = undo;
 $('mUndo').onclick = () => { $('menu').hidden = true; undo(); };
 $('mClose').onclick = () => $('menu').hidden = true;
 $('mHome').onclick = openHome;
-const openSettings = () => { renderSpeed(); $('settings').hidden = false; };
+const openSettings = () => { $('settings').hidden = false; };
 $('homeSettings').onclick = openSettings;
 $('settingsClose').onclick = () => $('settings').hidden = true;
 $('mNew').onclick = openSetup;
@@ -1576,10 +1575,21 @@ function showTiles(){
 $('mTiles').onclick = () => { showTiles(); openSub('tiles', true); };
 // 점수 종류: 게임 중 완성(C·R·K)과 게임 끝(미완성·들판)
 const RES_CATS = [
-  {id:'C', label:'성 완성', from:'log'}, {id:'R', label:'길 완성', from:'log'}, {id:'K', label:'수도원 완성', from:'log'},
-  {id:'C', label:'게임 끝 · 미완성 성', from:'end'}, {id:'R', label:'게임 끝 · 미완성 길', from:'end'}, {id:'K', label:'게임 끝 · 미완성 수도원', from:'end'},
-  {id:'F', label:'들판', from:'end'},
+  {id:'C', label:'성 완성', from:'log', rule:'타일·방패 1개당 2점'}, {id:'R', label:'길 완성', from:'log', rule:'타일 1장당 1점'}, {id:'K', label:'수도원 완성', from:'log', rule:'둘레까지 9칸 = 9점'},
+  {id:'C', label:'게임 끝 · 미완성 성', from:'end', rule:'타일·방패 1개당 1점'}, {id:'R', label:'게임 끝 · 미완성 길', from:'end', rule:'타일 1장당 1점'}, {id:'K', label:'게임 끝 · 미완성 수도원', from:'end', rule:'채운 칸 1칸당 1점'},
+  {id:'F', label:'들판', from:'end', rule:'닿은 완성된 성 1개당 3점'},
 ];
+// 한 곳의 점수 계산식(예: 타일 4장 + 방패 1개 × 2 = 10점)
+function resFormula(cat, e){
+  const n = (e.keys || []).length;
+  if (cat.id === 'C'){
+    const mul = cat.from === 'log' ? 2 : 1, sh = Math.max(0, e.pts/mul - n);
+    return `타일 ${n}장${sh ? ` + 방패 ${sh}개` : ''} × ${mul} = ${e.pts}점`;
+  }
+  if (cat.id === 'R') return `타일 ${n}장 × 1 = ${e.pts}점`;
+  if (cat.id === 'K') return cat.from === 'log' ? `9칸 모두 채움 = 9점` : `채운 칸 ${e.pts}칸 = ${e.pts}점`;
+  return `완성된 성 ${e.cities || 0}개 × 3 = ${e.pts}점`;
+}
 function resItems(pi, cat){
   const src = cat.from === 'log' ? G.log : (G.endItems || []);
   return src.filter(e => e.p === pi && e.kind === cat.id);
@@ -1594,7 +1604,7 @@ function showResult(){
       const items = resItems(p.i, cat);
       if (!items.length) return '';
       const pts = items.reduce((a,e) => a + e.pts, 0), extra = cat.id === 'F' ? ` · 완성된 성 ${items.reduce((a,e) => a + (e.cities || 0), 0)}개` : '';
-      return `<button class="rrow" data-p="${p.i}" data-c="${ci}"><span>${cat.label}</span><span class="cnt">${items.length}곳${extra}</span><span class="pts">${pts}점</span><span class="chev">›</span></button>`;
+      return `<button class="rrow" data-p="${p.i}" data-c="${ci}"><span class="lbl">${cat.label} <span class="cnt">${items.length}곳${extra}</span><small>${cat.rule}</small></span><span class="pts">${pts}점</span><span class="chev">›</span></button>`;
     }).join('');
     return `<div class="rcard ${p.score === top ? 'win' : ''}"><div class="rhead"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<span class="tot">${p.score}</span></div>${rows || '<div class="rrow none">점수를 낸 곳이 없어요</div>'}</div>`;
   }).join('');
@@ -1616,7 +1626,8 @@ function showReviewStep(){
   pick.forEach(e => { (e.keys || []).forEach(k => keys.add(k)); (e.cityKeys || []).forEach(k => city.add(k)); });
   review = {keys, city, color:P.color};
   const pts = pick.reduce((a,e) => a + e.pts, 0);
-  $('reviewText').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} · ${cat.label} <b>${pts}점</b> — ${idx < 0 ? `전체 ${items.length}곳` : `${idx+1} / ${items.length}곳`}${cat.id === 'F' ? '<br><small style="color:var(--muted)">점선 칸은 이 들판에 닿은 완성된 성이에요</small>' : ''}`;
+  const how = idx < 0 ? cat.rule : resFormula(cat, items[idx]);
+  $('reviewText').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} · ${cat.label} <b>${pts}점</b> — ${idx < 0 ? `전체 ${items.length}곳` : `${idx+1} / ${items.length}곳`}<br><small style="color:#cdb88f">${how}${idx < 0 && items.length > 1 ? ' · 다음 ▶을 누르면 한 곳씩 계산을 보여 줘요' : ''}</small>${cat.id === 'F' ? '<br><small style="color:var(--muted)">점선 칸은 이 들판에 닿은 완성된 성이에요</small>' : ''}`;
   $('revPrev').disabled = items.length < 2; $('revNext').disabled = items.length < 2;
   document.querySelector('footer.tray').hidden = true;
   $('reviewBar').hidden = false;
