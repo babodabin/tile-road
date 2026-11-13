@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#2a2119">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="성과 길">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -31,7 +31,8 @@
   --body:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
   color-scheme:dark;
 }
-/* 상태바는 불투명(black): iOS가 시계 아래부터 화면을 시작하므로 위 여백(env)은 0이 정상 — 값을 억지로 넣지 않는다.
+/* 상태바는 겹침(black-translucent, v12): 앱이 화면 맨 위부터 그려지고, 시계 자리는 env(safe-area-inset-top)만큼 #app·.overlay의 위 여백으로 비운다.
+   (불투명 black일 때는 가로로 돌리면 iOS가 상태바를 숨기며 화면 전체를 옮겨 위쪽이 흔들렸다.)
    아래는 빈 띠를 두지 않는다: 아래 막대(.tray)가 화면 맨 끝까지 내려가고, 홈 인디케이터 줄은 막대 위에 겹친다. */
 html{box-sizing:border-box;height:100%;background:var(--table);position:fixed;inset:0;overflow:hidden}
 *,*::before,*::after{box-sizing:inherit}
@@ -39,11 +40,11 @@ html{box-sizing:border-box;height:100%;background:var(--table);position:fixed;in
 body{margin:0;height:100%;position:fixed;inset:0;background:var(--table);color:var(--ink);font-family:var(--body);font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 /* 화면에 딱 고정: 아이폰을 돌렸다 오면 페이지가 밀려 위가 잘리고 아래가 비는 문제를 막는다.
    가로 화면에서도 양옆을 비우지 않고 꽉 채운다(노치 쪽은 위·아래 막대의 .gut 여백이 피함). */
-#app{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);display:flex;flex-direction:column}
+#app{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);display:flex;flex-direction:column;background:var(--surface)}
 .gut{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 button{font-family:inherit;color:inherit;cursor:pointer}
 
-header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding-top:12px;padding-bottom:6px;display:flex;align-items:center;gap:6px;min-height:50px}
+header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding-top:8px;padding-bottom:6px;display:flex;align-items:center;gap:6px;min-height:50px}
 #chips{display:flex;gap:4px;flex:1;min-width:0}
 .chip{flex:1;min-width:0;border-radius:9px;padding:5px 7px;background:#56452f;border:2px solid #6b5840;display:flex;flex-direction:column;gap:2px;line-height:1.15;color:#fff8e8;-webkit-font-smoothing:antialiased}
 .chip.on{border-color:var(--gold);background:#6a5333;box-shadow:0 0 0 1px #0006}
@@ -53,13 +54,19 @@ header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding
 .chip .sc b{font-size:19px;font-weight:800}
 .chip .sc .mp{display:flex;align-items:center;gap:3px;font-size:17px;font-weight:800;color:#fff8e8}
 .chip .sc .mp svg{width:15px;height:15px;flex:none}
+#chips.crowd .chip{padding:5px 5px}
+#chips.crowd .chip .nm{font-size:12px}
+#chips.crowd .chip .sc b{font-size:16px}
+#chips.crowd .chip .sc .mp{font-size:13px;gap:1px}
+#chips.crowd .chip .sc .mp svg{width:11px;height:11px}
+#chips.crowd .chip .plus{display:none}
 .iconbtn{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--rule);background:var(--surface-2);font-size:18px;display:grid;place-items:center}
 
-#wrap{position:relative;flex:1;min-height:0;overflow:hidden}
+#wrap{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--table)}
 #board{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #fit{position:absolute;right:10px;top:10px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:16px}
 #undo{position:absolute;right:10px;top:56px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:18px}
-#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#1c150fe6;border:1px solid var(--rule);border-radius:10px;padding:7px 12px;font-size:13px;max-width:80%;text-align:center;pointer-events:none;transition:opacity .3s}
+#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#1c150fe6;border:1px solid var(--rule);border-radius:10px;padding:7px 12px;font-size:13px;max-width:calc(100% - 120px);text-align:center;pointer-events:none;transition:opacity .3s}
 #toast.hide{opacity:0}
 
 footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-top:8px;padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 22px));display:flex;align-items:center;gap:10px;min-height:88px}
@@ -298,7 +305,6 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 <div class="overlay page" id="settings" hidden style="z-index:25">
   <div class="sheet">
     <div class="ptitle">설정</div>
-    <p class="psub">앱 정보</p>
     <div class="glabel">앱 정보</div>
     <div class="group">
       <div class="row"><span class="grow">판번호</span><small class="ver"></small></div>
@@ -336,7 +342,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v11 · 2026-10-31';
+const APP_VERSION = 'v12 · 2026-11-13';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -404,7 +410,7 @@ function newGame(seats){
     board: new Map([[key(0,0), {t:START_TILE, r:0, m:null}]]),
     deck, cur:0, tile:null, phase:'place', last:null, log:[], turnNo:0,
   };
-  shown = []; holdUntil = 0; aiShow = null;
+  shown = []; holdUntil = 0; aiShow = null; gen++; busy = false; pending = null;
   fitView(false);
   startTurn();
 }
@@ -590,6 +596,7 @@ function undoAllowed(){ return G.players.filter(p => !p.ai).length === 1 && G.pl
 function canUndo(){ return G && G.undoPrev && G.phase !== 'over' && !busy && !G.players[G.cur].ai && undoAllowed(); }
 function undo(){
   if (!canUndo()) return;
+  gen++;
   const d = fromSnapshot(JSON.parse(G.undoPrev));
   d.undoCur = G.undoPrev; d.undoPrev = null;
   G = d;
@@ -754,6 +761,7 @@ function aiHard(deep){
     }
   }
   moves.sort((a,b) => b.v - a.v);
+  if (deep === 'all') return moves;
   if (!(deep || AIP.reply) || G.deck.length < 2) return moves[0];
   // 2단계: 좋은 수 몇 개만, 다음 사람이 남은 타일 중 하나를 뽑아 가장 좋게 받아치는 경우를 여러 번 해 보고 평균
   const opp = (pi + 1) % G.players.length, K = Math.min(deep ? deep.K : AIP.topK, moves.length), S = deep ? deep.S : AIP.samples;
@@ -890,34 +898,103 @@ function posValue(ctx){
     return s;
   });
 }
+// 최상: 한 수 앞 평가로 좋은 수 dK개를 고른 뒤, 각각 남은 판을 여러 번 가상으로 둬 보고 평균이 가장 좋은 수를 고른다.
+// 남은 타일 순서는 모르므로 매번 새로 섞고, 후보 수끼리는 같은 순서로 둬 봐서 공평하게 비교한다.
+// 계산은 잘게 나눠(setTimeout) 생각하는 동안에도 화면이 움직인다. cb(고른 수).
+Object.assign(AIP, {dK:5, dN:40, dMs:2500, dDepth:6, dPrior:3}); // dDepth: 몇 수 앞까지 둬 보고 평가할지(0이면 끝까지 — 시험해 보니 더 약함)
+let gen = 0; // 새 게임·이어하기·무르기 때 올려서, 진행 중이던 컴퓨터 차례를 버린다
+function aiDeep(cb){
+  const pi = G.cur, t = G.tile, my = gen;
+  const moves = aiHard('all').slice(0, AIP.dK);
+  if (moves.length < 2 || !G.deck.length){ cb(moves[0]); return; }
+  const sums = moves.map(() => 0), t0 = performance.now();
+  let n = 0;
+  const step = () => {
+    if (my !== gen) return;
+    const until = performance.now() + 24;
+    do {
+      const order = G.deck.slice();
+      for (let i = order.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [order[i],order[j]] = [order[j],order[i]]; }
+      moves.forEach((mv,i) => { sums[i] += rolloutValue(mv, order, pi, t); });
+      n++;
+    } while (n < AIP.dN && performance.now() < until);
+    if (n < AIP.dN && performance.now() - t0 < AIP.dMs){ setTimeout(step, 0); return; }
+    let best = moves[0], bv = -Infinity;
+    moves.forEach((mv,i) => { const v = (sums[i] + AIP.dPrior*mv.v) / (n + AIP.dPrior); if (v > bv){ bv = v; best = mv; } });
+    cb(best);
+  };
+  step();
+}
+// mv를 두고 나머지 판을 order 순서로(끝에서부터 뽑음) 중 수준으로 끝까지 둬 본 뒤 pi 쪽에서 본 값. 판 상태는 되돌린다.
+function rolloutValue(mv, order, pi, t){
+  const sb = G.board, sd = G.deck, sc = G.cur, st = G.tile, sCands = cands, sEnd = G.endItems, nP = G.players.length;
+  const sp = G.players.map(p => [p.score, p.meeples, p.end]);
+  G.board = new Map();
+  for (const [k,c] of sb) G.board.set(k, {t:c.t, r:c.r, m:c.m});
+  const place = (x, y, tt, r, fi, pl) => {
+    const cell = {t:tt, r, m:null};
+    G.board.set(key(x,y), cell);
+    if (fi !== null && fi !== undefined && G.players[pl].meeples > 0){ cell.m = {p:pl, f:fi}; G.players[pl].meeples--; }
+    scoreCompleted(x,y);
+  };
+  place(mv.x, mv.y, t, mv.r, mv.fi, pi);
+  let cur = (pi+1) % nP, plies = 0, cut = -1;
+  for (let i = order.length-1; i >= 0; i--){
+    if (AIP.dDepth && plies >= AIP.dDepth){ cut = i; break; }
+    const c2 = candidatesFor(order[i]);
+    if (!c2.size) continue;
+    cands = c2; G.tile = order[i]; G.cur = cur; G.deck = {length:i};
+    const m2 = aiChoose(0.3);
+    place(m2.x, m2.y, order[i], m2.r, m2.fi, cur);
+    cur = (cur+1) % nP; plies++;
+  }
+  let V;
+  if (cut >= 0){
+    const counts = Array(TILES.length).fill(0);
+    for (let i = 0; i <= cut; i++) counts[order[i]]++;
+    V = posValue({counts, D:cut+1, nP});
+  } else { endScoring(); V = G.players.map(p => p.score); }
+  const v = relValue(V, pi);
+  G.board = sb; G.deck = sd; G.cur = sc; G.tile = st; cands = sCands; G.endItems = sEnd;
+  G.players.forEach((p,i) => { p.score = sp[i][0]; p.meeples = sp[i][1]; p.end = sp[i][2]; });
+  return v;
+}
+function chooseMove(P, cb){
+  if (P.level === 'xhard') aiDeep(cb);
+  else cb(P.level === 'hard' ? aiHard() : aiChoose(P.level === 'easy' ? 7 : 0.3));
+}
 // 컴퓨터 차례는 사람이 따라볼 수 있게 단계별로 보여 준다(보통 약 2.5초, 빠르게는 짧게).
 let holdUntil = 0, aiShow = null;
 function runAI(){
   busy = true;
   updateUI();
-  const fast = prefs.speed === 'fast';
+  const fast = prefs.speed === 'fast', my = gen;
+  const later = (ms, fn) => setTimeout(() => { if (my === gen) fn(); }, ms);
   const T = fast ? {think:60, pan:0, tile:300, meeple:0} : {think:350, pan:450, tile:1000, meeple:850};
   const wait = Math.max(T.think, holdUntil - performance.now());
-  setTimeout(() => {
+  later(wait, () => {
     const P = G.players[G.cur], who = G.cur;
-    const mv = P.level === 'xhard' ? withWeights(AIW_X, aiHard) : P.level === 'hard' ? aiHard() : aiChoose(P.level === 'easy' ? 7 : 0.3);
-    panTo(mv.x, mv.y, T.pan, () => {
-      pending = {x:mv.x, y:mv.y, r:mv.r, ai:true, t0:performance.now()};
-      draw();
-      setTimeout(() => {
-        G.board.set(key(mv.x,mv.y), {t:G.tile, r:mv.r, m:null});
-        G.last = {x:mv.x, y:mv.y, p:who};
-        cands = new Map(); pending = null;
-        const done = () => { aiShow = null; busy = false; finishTurn(mv.fi); };
-        if (mv.fi === null || mv.fi === undefined){ draw(); done(); return; }
-        const f = rotOf(G.board.get(key(mv.x,mv.y))).feats[mv.fi];
-        aiShow = {x:mv.x, y:mv.y, m:f.m, lying:f.t === 'F', color:P.color, t0:performance.now()};
-        toast(`${P.name} · ${KIND[f.t]}에 일꾼`);
+    chooseMove(P, mv => {
+      if (my !== gen) return;
+      panTo(mv.x, mv.y, T.pan, () => {
+        if (my !== gen) return;
+        pending = {x:mv.x, y:mv.y, r:mv.r, ai:true, t0:performance.now()};
         draw();
-        setTimeout(done, T.meeple);
-      }, T.tile);
+        later(T.tile, () => {
+          G.board.set(key(mv.x,mv.y), {t:G.tile, r:mv.r, m:null});
+          G.last = {x:mv.x, y:mv.y, p:who};
+          cands = new Map(); pending = null;
+          const done = () => { aiShow = null; busy = false; finishTurn(mv.fi); };
+          if (mv.fi === null || mv.fi === undefined){ draw(); done(); return; }
+          const f = rotOf(G.board.get(key(mv.x,mv.y))).feats[mv.fi];
+          aiShow = {x:mv.x, y:mv.y, m:f.m, lying:f.t === 'F', color:P.color, t0:performance.now()};
+          toast(`${P.name} · ${KIND[f.t]}에 일꾼`);
+          draw();
+          later(T.meeple, done);
+        });
+      });
     });
-  }, wait);
+  });
 }
 // 화면을 그 칸으로 부드럽게 옮긴다(이미 잘 보이면 그대로)
 function panTo(x, y, ms, cb){
@@ -961,7 +1038,7 @@ function loadSave(){
 }
 function resume(d){
   G = d;
-  shown = []; holdUntil = 0; aiShow = null;
+  shown = []; holdUntil = 0; aiShow = null; gen++; busy = false; pending = null;
   fitView(false);
   if (G.phase === 'over'){ updateUI(); draw(); showResult(); return; }
   // 차례 시작 때 저장하므로, 뽑아 둔 타일을 다시 덱 위에 올리고 그 차례부터 다시 한다
@@ -1203,7 +1280,7 @@ function render(){
     for (const s of spots){
       const [sx,sy] = toScreen(x-.5+s.m[0], y-.5+s.m[1]);
       if (meepleSel === s.fi){ drawMeeple(ctx, sx, sy, z*.3, G.players[G.cur].color, s.t === 'F', true); continue; }
-      ctx.beginPath(); ctx.arc(sx, sy, Math.max(9, z*.09), 0, Math.PI*2);
+      ctx.beginPath(); ctx.arc(sx, sy, Math.max(13, z*.13), 0, Math.PI*2);
       ctx.fillStyle = '#ffffffb0'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = G.players[G.cur].color; ctx.stroke();
     }
   }
@@ -1296,7 +1373,7 @@ function onTap(sx, sy){
     let hit = null, bestD = Infinity;
     for (const s of spots){
       const [px,py] = toScreen(x-.5+s.m[0], y-.5+s.m[1]), d = Math.hypot(px-sx, py-sy);
-      if (d < Math.max(24, cam.z*.18) && d < bestD){ hit = s; bestD = d; }
+      if (d < Math.max(30, cam.z*.22) && d < bestD){ hit = s; bestD = d; }
     }
     meepleSel = hit ? (meepleSel === hit.fi ? null : hit.fi) : null;
     updateUI(); draw();
@@ -1314,6 +1391,7 @@ const meepleIcon = color => `<svg viewBox="-0.55 -0.55 1.1 1.1" aria-hidden="tru
 function renderChips(){
   const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
   if (shown.length !== G.players.length) shown = G.players.map(p => p.score);
+  $('chips').classList.toggle('crowd', crowd);
   $('chips').innerHTML = G.players.map((p,i) => {
     const gain = p.score - shown[i];
     return `
@@ -1365,12 +1443,12 @@ function updateUI(){
   $('undo').hidden = !canUndo();
   $('who').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} 차례`;
   if (P.ai || busy){
-    $('hint').textContent = '컴퓨터가 생각하는 중…';
+    $('hint').textContent = P.level === 'xhard' ? '컴퓨터가 깊이 생각하는 중…' : '컴퓨터가 생각하는 중…';
     b1.hidden = b2.hidden = true;
     return;
   }
   if (G.phase === 'place'){
-    $('hint').textContent = pending ? '같은 칸을 누르면 돌아가요. 맞으면 놓기.' : '점선 칸을 눌러 타일을 놓으세요.';
+    $('hint').textContent = pending ? '같은 칸을 누르면 돌아가요. 맞으면 놓기.' : '점선 칸을 눌러 놓으세요.';
     b1.textContent = '⟳ 돌리기'; b2.textContent = '놓기';
     b2.disabled = !pending;
     b1.onclick = () => {
@@ -1381,7 +1459,7 @@ function updateUI(){
     };
     b2.onclick = confirmPlace;
   } else if (G.phase === 'meeple'){
-    $('hint').textContent = meepleSel === null ? `일꾼을 올릴 곳(흰 동그라미)을 누르세요. 남은 일꾼 ${P.meeples}` : `${KIND[spots.find(s => s.fi === meepleSel).t]}에 일꾼을 올립니다.`;
+    $('hint').textContent = meepleSel === null ? `흰 동그라미를 눌러 일꾼을 올리세요.` : `${KIND[spots.find(s => s.fi === meepleSel).t]}에 일꾼을 올립니다.`;
     b1.textContent = '← 되돌리기';
     b2.textContent = meepleSel === null ? '차례 넘기기' : '일꾼 놓기';
     b1.onclick = backToPlace;
@@ -1510,11 +1588,12 @@ function drawScene(){
       c.save(); c.translate(x*S + S/2, y*S + S/2); c.rotate(cell.r*Math.PI/2); c.drawImage(TILE_IMG[cell.t], -S/2, -S/2, S, S); c.restore();
     }
     // 일꾼 세 개
-    const picks = [...b].filter(([,cell]) => ROT[cell.t][cell.r].feats.some(f => f.t !== 'F'));
+    const onLand = f => f.t === 'C' || f.t === 'R';
+    const picks = [...b].filter(([,cell]) => ROT[cell.t][cell.r].feats.some(onLand) && !ROT[cell.t][cell.r].feats.some(f => f.t === 'K' || f.sh));
     [1, 6, 10].forEach((ix, n) => {
       const pk = picks[ix % picks.length];
       if (!pk) return;
-      const [x,y] = pk[0].split(',').map(Number), f = ROT[pk[1].t][pk[1].r].feats.find(f => f.t !== 'F');
+      const [x,y] = pk[0].split(',').map(Number), f = ROT[pk[1].t][pk[1].r].feats.find(onLand);
       drawMeeple(c, x*S + f.m[0]*S, y*S + f.m[1]*S, S*.3, COLORS[n].c, false);
     });
     sceneDone = true;
