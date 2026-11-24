@@ -1,5 +1,5 @@
 // 성과 길 — 오프라인 캐시
-const CACHE = 'tileroad-v12';
+const CACHE = 'tileroad-v13';
 const CORE = ['./index.html','./manifest.json','./icon-180.png','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', event => {
@@ -20,7 +20,7 @@ self.addEventListener('fetch', event => {
   // 화면은 항상 새 버전을 먼저 받고, 안 되면 캐시
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request.url, { cache: 'no-cache' }) // 브라우저가 들고 있는 옛 파일 말고 서버에 새로 확인
         .then(response => {
           const copy = response.clone();
           caches.open(CACHE).then(cache => cache.put('./index.html', copy));

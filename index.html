@@ -64,8 +64,8 @@ header.top{background:var(--surface);border-bottom:1px solid var(--rule);padding
 
 #wrap{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--table)}
 #board{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#fit{position:absolute;right:10px;top:10px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:16px}
-#undo{position:absolute;right:10px;top:56px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:18px}
+#fit{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:10px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:16px}
+#undo{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:56px;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:#3a2e22d9;font-size:18px}
 #toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#1c150fe6;border:1px solid var(--rule);border-radius:10px;padding:7px 12px;font-size:13px;max-width:calc(100% - 120px);text-align:center;pointer-events:none;transition:opacity .3s}
 #toast.hide{opacity:0}
 
@@ -79,7 +79,7 @@ footer.tray{background:var(--surface);border-top:1px solid var(--rule);padding-t
 .btn.primary{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:700}
 .btn:disabled{opacity:.4}
 
-.overlay{position:fixed;inset:0;background:var(--table);z-index:20;overflow:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.overlay{position:fixed;inset:0;background:var(--table);z-index:20;overflow:auto;border-top:env(safe-area-inset-top,0px) solid var(--table);padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheet{max-width:520px;margin:0 auto;padding:24px 16px 32px}
 .title{font-family:var(--display);font-weight:800;font-size:34px;margin:12px 0 2px;letter-spacing:.04em;text-align:center}
 .sub{color:var(--muted);text-align:center;margin:0 0 22px;font-size:13px}
@@ -112,14 +112,29 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 #leftBtn{flex:none}
 #leftBtn b{font-size:17px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
 #leftBtn small{color:var(--muted);font-size:11px}
-#lastBtn{flex:1;justify-content:flex-end;white-space:nowrap;overflow:hidden}
-#lastBtn span.t{overflow:hidden;text-overflow:ellipsis}
+#lastBtn{flex:1;justify-content:flex-end}
+#lastBtn span.t{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:0 8px}
+#lastBtn span.e{white-space:nowrap}
+@media (max-width:480px){#lastBtn .cap{display:none}}
 #lastBtn b{color:var(--gold)}
 .chip.gain{border-color:#fff3c4;background:#7a5f34;box-shadow:0 0 0 2px #e3b75a88}
 .chip .plus{color:#ffe08a;font-size:12px;font-weight:800;margin-left:2px}
 
+@media (orientation:landscape) and (max-height:500px){
+  header.top{padding-top:5px;padding-bottom:4px;min-height:0}
+  .chip,#chips.crowd .chip{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:3px 8px}
+  .chip .sc{align-items:center;gap:10px}
+  .iconbtn{height:34px}
+  .strip{padding-block:0;min-height:26px}
+  footer.tray{min-height:0;padding-top:5px;padding-bottom:max(5px, calc(env(safe-area-inset-bottom,0px) - 14px))}
+  #preview{width:54px;height:54px}
+  #btns{flex-direction:row}
+  #reviewBar{flex-direction:row;align-items:center;gap:16px;padding-top:6px}
+  #reviewText{flex:1}
+  #reviewBtns{flex:none}
+}
 /* 설정·하위 화면: 위 제목, 아래 고정 버튼 */
-.page{display:flex;flex-direction:column}
+.overlay.page{display:flex;flex-direction:column;padding-bottom:0}
 .page .sheet{flex:1;width:100%;padding-bottom:16px}
 .ptitle{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.03em;margin:6px 0 2px}
 .psub{color:var(--muted);font-size:13px;margin:0 0 18px}
@@ -342,7 +357,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v12 · 2026-11-13';
+const APP_VERSION = 'v13 · 2026-11-24';
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -969,15 +984,17 @@ function runAI(){
   busy = true;
   updateUI();
   const fast = prefs.speed === 'fast', my = gen;
-  const later = (ms, fn) => setTimeout(() => { if (my === gen) fn(); }, ms);
+  const later = (ms, fn) => setTimeout(() => {
+    if (my !== gen) return;
+    if (paused()){ later(250, fn); return; }
+    fn();
+  }, ms);
   const T = fast ? {think:60, pan:0, tile:300, meeple:0} : {think:350, pan:450, tile:1000, meeple:850};
   const wait = Math.max(T.think, holdUntil - performance.now());
   later(wait, () => {
     const P = G.players[G.cur], who = G.cur;
-    chooseMove(P, mv => {
-      if (my !== gen) return;
-      panTo(mv.x, mv.y, T.pan, () => {
-        if (my !== gen) return;
+    chooseMove(P, mv => later(0, () => {
+      panTo(mv.x, mv.y, T.pan, () => later(0, () => {
         pending = {x:mv.x, y:mv.y, r:mv.r, ai:true, t0:performance.now()};
         draw();
         later(T.tile, () => {
@@ -992,10 +1009,13 @@ function runAI(){
           draw();
           later(T.meeple, done);
         });
-      });
-    });
+      }));
+    }));
   });
 }
+// 게임을 덮는 화면이 열려 있으면 컴퓨터는 기다린다
+const PAUSERS = ['home','setup','menu','tiles','logPage','rules','settings','ask'];
+function paused(){ return PAUSERS.some(id => $(id).hidden === false); }
 // 화면을 그 칸으로 부드럽게 옮긴다(이미 잘 보이면 그대로)
 function panTo(x, y, ms, cb){
   const [sx,sy] = toScreen(x,y), m = cam.z*0.9;
@@ -1156,6 +1176,7 @@ function syncSize(){
 }
 function resize(){
   if (!syncSize()) return;
+  if (review) fitKeys([...review.keys, ...review.city]);
   if (raf){ cancelAnimationFrame(raf); raf = 0; }
   render();
 }
@@ -1391,6 +1412,7 @@ const meepleIcon = color => `<svg viewBox="-0.55 -0.55 1.1 1.1" aria-hidden="tru
 function renderChips(){
   const crowd = G.players.length >= 4; // 칸이 좁으면 "컴퓨터 1"을 "컴1"로 줄여 보인다
   if (shown.length !== G.players.length) shown = G.players.map(p => p.score);
+  G.players.forEach((p,i) => { if (shown[i] > p.score) shown[i] = p.score; });
   $('chips').classList.toggle('crowd', crowd);
   $('chips').innerHTML = G.players.map((p,i) => {
     const gain = p.score - shown[i];
@@ -1408,7 +1430,6 @@ function renderChips(){
       renderChips();
     }, prefs.speed === 'fast' ? 40 : 110);
   }
-  G.players.forEach((p,i) => { if (shown[i] > p.score) shown[i] = p.score; });
 }
 function renderStrip(){
   const left = G.deck.length, same = G.tile !== null ? G.deck.filter(t => t === G.tile).length : null;
@@ -1416,7 +1437,7 @@ function renderStrip(){
     : `<span>남은 타일</span><b>${left}</b><span>장</span>${same !== null && G.phase !== 'meeple' ? `<small>· 같은 모양 ${same}장 더</small>` : ''}`;
   const L = G.lastScore;
   $('lastBtn').innerHTML = L && L.length
-    ? `<span class="t">마지막 점수 ${L.map(e => `<span class="dot" style="display:inline-block;background:${G.players[e.p].color};vertical-align:middle"></span> ${esc(G.players[e.p].name)} ${KIND[e.kind]} <b>+${e.pts}</b>`).join(' ')}</span>`
+    ? `<span class="t"><span class="cap">마지막 점수</span>${L.map(e => `<span class="e"><span class="dot" style="display:inline-block;background:${G.players[e.p].color};vertical-align:middle"></span> ${esc(L.length > 1 || G.players.length >= 4 ? G.players[e.p].name.replace(/^컴퓨터 ?(\d)/, '컴$1') : G.players[e.p].name)} ${KIND[e.kind]} <b>+${e.pts}</b></span>`).join('')}</span>`
     : '<span class="t" style="color:var(--muted)">아직 점수 난 곳 없음</span>';
 }
 function updateUI(){
@@ -1590,12 +1611,11 @@ function drawScene(){
     // 일꾼 세 개
     const onLand = f => f.t === 'C' || f.t === 'R';
     const picks = [...b].filter(([,cell]) => ROT[cell.t][cell.r].feats.some(onLand) && !ROT[cell.t][cell.r].feats.some(f => f.t === 'K' || f.sh));
-    [1, 6, 10].forEach((ix, n) => {
-      const pk = picks[ix % picks.length];
-      if (!pk) return;
-      const [x,y] = pk[0].split(',').map(Number), f = ROT[pk[1].t][pk[1].r].feats.find(onLand);
-      drawMeeple(c, x*S + f.m[0]*S, y*S + f.m[1]*S, S*.3, COLORS[n].c, false);
-    });
+    const spotsOn = picks.map(([k,cell]) => { const [x,y] = k.split(',').map(Number), f = ROT[cell.t][cell.r].feats.find(onLand); return [x + f.m[0], y + f.m[1]]; })
+      .filter(([x,y]) => x > .3 && x < COLS-.3 && y > .3 && y < ROWS-.3);
+    const chosen = [];
+    spotsOn.forEach(q => { if (chosen.length < 3 && chosen.every(c2 => Math.hypot(c2[0]-q[0], c2[1]-q[1]) > 1)) chosen.push(q); });
+    chosen.forEach(([x,y], n) => drawMeeple(c, x*S, y*S, S*.3, COLORS[n].c, false));
     sceneDone = true;
     return;
   }
@@ -1706,7 +1726,7 @@ function showReviewStep(){
   review = {keys, city, color:P.color};
   const pts = pick.reduce((a,e) => a + e.pts, 0);
   const how = idx < 0 ? cat.rule : resFormula(cat, items[idx]);
-  $('reviewText').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} · ${cat.label} <b>${pts}점</b> — ${idx < 0 ? `전체 ${items.length}곳` : `${idx+1} / ${items.length}곳`}<br><small style="color:#cdb88f">${how}${idx < 0 && items.length > 1 ? ' · 다음 ▶을 누르면 한 곳씩 계산을 보여 줘요' : ''}</small>${cat.id === 'F' ? '<br><small style="color:var(--muted)">점선 칸은 이 들판에 닿은 완성된 성이에요</small>' : ''}`;
+  $('reviewText').innerHTML = `<span class="dot" style="display:inline-block;background:${P.color};margin-right:6px"></span>${esc(P.name)} · ${cat.label} <b>${pts}점</b> — ${idx < 0 ? `전체 ${items.length}곳` : `${idx+1} / ${items.length}곳`}<br><small style="color:#cdb88f">${how}${idx < 0 && items.length > 1 ? ' · 다음 ▶ 한 곳씩' : ''}</small>${cat.id === 'F' ? '<br><small style="color:var(--muted)">점선 칸은 이 들판에 닿은 완성된 성이에요</small>' : ''}`;
   $('revPrev').disabled = items.length < 2; $('revNext').disabled = items.length < 2;
   document.querySelector('footer.tray').hidden = true;
   $('reviewBar').hidden = false;
