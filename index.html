@@ -158,6 +158,11 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 .log .item b{margin-left:auto;color:var(--gold)}
 .log .item small{color:var(--muted)}
 
+.upd{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.upd b{font-size:17px;color:var(--gold);margin-right:8px}
+.upd small{color:var(--muted);font-size:12px}
+.upd ul{margin:6px 0 0;padding-left:18px;line-height:1.6;font-size:14px}
+
 /* 결과 */
 .rcard{background:var(--surface);border:1px solid var(--rule);border-radius:14px;margin-top:12px;overflow:hidden}
 .rcard.win{border-color:var(--gold)}
@@ -262,6 +267,7 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
       <button class="row" id="mLog"><span class="grow">점수 기록</span><small id="mLogCnt"></small><span class="chev">›</span></button>
       <button class="row" id="mUndo"><span class="grow">↶ 한 수 무르기</span><small>바로 전 내 차례로</small></button>
       <button class="row" id="mRules"><span class="grow">규칙</span><span class="chev">›</span></button>
+      <button class="row" id="mUpd"><span class="grow">업데이트 기록</span><small class="ver"></small><span class="chev">›</span></button>
     </div>
     <div class="glabel">나가기</div>
     <div class="group">
@@ -323,16 +329,34 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
     <div class="glabel">앱 정보</div>
     <div class="group">
       <div class="row"><span class="grow">판번호</span><small class="ver"></small></div>
+      <button class="row" id="setUpd"><span class="grow">업데이트 기록</span><span class="chev">›</span></button>
     </div>
+    <div class="glabel">백업</div>
+    <div class="group">
+      <button class="row" id="bkSave"><span class="grow">백업 파일 저장</span><small>지금 저장된 게임</small></button>
+      <button class="row" id="bkLoad"><span class="grow">백업 불러오기</span><span class="chev">›</span></button>
+    </div>
+    <input type="file" id="bkFile" accept=".json,application/json" hidden>
+    <p class="note" id="bkMsg" role="status">앱을 지우기 전에 백업 파일을 저장해 두면, 다시 설치한 뒤 불러올 수 있어요.</p>
     <p class="note">아이폰에서 바뀐 게 안 보이면 판번호부터 확인하세요. 앱을 완전히 닫았다 열면 새 버전을 받아요.</p>
   </div>
   <div class="dock"><button class="btn primary" id="settingsClose">닫기</button></div>
 </div>
 
+<div class="overlay page" id="updates" hidden style="z-index:26">
+  <div class="sheet">
+    <button class="back subBack">‹ 설정</button>
+    <div class="ptitle">업데이트 기록</div>
+    <p class="psub">맨 위가 지금 버전이에요</p>
+    <div id="updList"></div>
+  </div>
+  <div class="dock"><button class="btn primary subDone">닫기</button></div>
+</div>
+
 <div class="overlay" id="ask" hidden style="z-index:30">
   <div class="sheet" style="min-height:100%;display:flex;flex-direction:column;justify-content:center">
-    <h2 style="text-align:center">진행 중인 게임이 있어요</h2>
-    <p class="sub" style="margin-bottom:12px">새로 시작하면 지금 게임은 지워져요.</p>
+    <h2 style="text-align:center" id="askTitle"></h2>
+    <p class="sub" style="margin-bottom:12px" id="askText"></p>
     <button class="btn primary wide" id="askYes">새로 시작</button>
     <button class="btn wide" id="askNo">취소</button>
   </div>
@@ -357,7 +381,18 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 // 특징(f): t='C' 성 / 'R' 길 / 'K' 수도원 / 'F' 들판. s=변, p=포트, a=닿은 성(같은 타일 특징 번호), sh=방패, m=일꾼 자리, sp=방패 그림 자리.
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
-const APP_VERSION = 'v13 · 2026-11-24';
+// sw.js 캐시 이름은 등록 주소(sw.js?v=…)로 여기 값을 그대로 받는다. 올릴 때는 이 줄을 올리고 아래 UPDATES 맨 위에 한 줄 추가.
+const APP_VERSION = 'v14';
+// 업데이트 기록(앱 안에서 보임): 맨 위가 지금 버전
+const UPDATES = [
+  {v:'v14', d:'2026-11-25', t:['업데이트 기록 화면', '저장이 깨지면 바로 전 저장으로 되찾기', '"놓기"를 빨리 두 번 눌러도 일꾼 고르기를 건너뛰지 않음', '백업 파일 저장·불러오기', '껐다 켜도 마지막 점수와 지난 결과가 남음']},
+  {v:'v13', d:'2026-11-24', t:['설정을 열면 컴퓨터도 정말 멈춤', '마지막 점수가 잘리지 않음', '가로 화면에서 판을 넓게']},
+  {v:'v12', d:'2026-11-13', t:['최상 컴퓨터가 훨씬 세짐', '생각하는 동안 화면이 멈추지 않음', '일꾼 자리 동그라미 크게']},
+  {v:'v11', d:'2026-10-31', t:['남은 일꾼 크게', '결과에 칸당 점수와 계산식', '최상 실력 추가']},
+  {v:'v10', d:'2026-10-31', t:['남은 타일·마지막 점수 줄', '새 설정 화면', '컴퓨터 차례 천천히', '결과 점수를 판에서 보기']},
+  {v:'v9', d:'2026-10-27', t:['v2~v9: 화면 여백, 가로·세로 돌리기, 게임 중 새 게임, 설정 정리']},
+  {v:'v1', d:'2026-10-26', t:['첫 버전']},
+];
 const ALL8 = [0,1,2,3,4,5,6,7];
 const TILES = [
   {id:'A',n:2,f:[{t:'K',m:[.5,.47]},{t:'R',s:[2],m:[.5,.86]},{t:'F',p:ALL8,m:[.18,.2]}]},
@@ -611,8 +646,9 @@ function undoAllowed(){ return G.players.filter(p => !p.ai).length === 1 && G.pl
 function canUndo(){ return G && G.undoPrev && G.phase !== 'over' && !busy && !G.players[G.cur].ai && undoAllowed(); }
 function undo(){
   if (!canUndo()) return;
+  const d = parseSave(G.undoPrev);
+  if (!d) return;
   gen++;
-  const d = fromSnapshot(JSON.parse(G.undoPrev));
   d.undoCur = G.undoPrev; d.undoPrev = null;
   G = d;
   pending = null; meepleSel = null; spots = []; anims = []; flashes = [];
@@ -622,8 +658,15 @@ function undo(){
   enterTurn();
 }
 
+// 버튼이 하는 일이 바뀌는 순간(놓기 → 차례 넘기기 등) 잠깐 누르기를 무시해, 빨리 두 번 눌러도 한 번만 처리되게 한다
+let lockUntil = 0;
+const lockTaps = () => { lockUntil = performance.now() + 450; };
+document.addEventListener('click', e => {
+  if (e.isTrusted && performance.now() < lockUntil){ e.stopPropagation(); e.preventDefault(); }
+}, true);
 function confirmPlace(){
   if (!pending) return;
+  lockTaps();
   G.board.set(key(pending.x,pending.y), {t:G.tile, r:pending.r, m:null});
   G.last = {x:pending.x, y:pending.y, p:G.cur};
   cands = new Map();
@@ -641,6 +684,7 @@ function computeSpots(){
   });
 }
 function backToPlace(){
+  lockTaps();
   const {x,y} = G.last;
   pending = {x, y, r:G.board.get(key(x,y)).r};
   G.board.delete(key(x,y));
@@ -650,6 +694,7 @@ function backToPlace(){
   updateUI(); draw();
 }
 function finishTurn(fi){
+  if (!G.players[G.cur].ai) lockTaps();
   const {x,y} = G.last, p = G.players[G.cur];
   if (fi !== null && fi !== undefined && p.meeples > 0){
     G.board.get(key(x,y)).m = {p:G.cur, f:fi};
@@ -1014,7 +1059,7 @@ function runAI(){
   });
 }
 // 게임을 덮는 화면이 열려 있으면 컴퓨터는 기다린다
-const PAUSERS = ['home','setup','menu','tiles','logPage','rules','settings','ask'];
+const PAUSERS = ['home','setup','menu','tiles','logPage','rules','settings','updates','ask'];
 function paused(){ return PAUSERS.some(id => $(id).hidden === false); }
 // 화면을 그 칸으로 부드럽게 옮긴다(이미 잘 보이면 그대로)
 function panTo(x, y, ms, cb){
@@ -1035,25 +1080,76 @@ function panTo(x, y, ms, cb){
 }
 
 // ───────── 저장 ─────────
+// 저장 형식 번호. 형식을 바꾸면 올리고 migrate()에 바꾸는 법을 한 단계 추가한다.
+const SAVE_VERSION = 2;
+const PREV_KEY = 'tileroad-save-prev'; // 직전 저장본(지금 저장이 깨졌을 때 되찾는 용도)
 function snapshot(){
   return {
-    v:1, players:G.players, deck:G.deck, cur:G.cur, tile:G.tile, phase:G.phase, last:G.last, log:G.log, turnNo:G.turnNo,
+    v:1, saveVersion:SAVE_VERSION, players:G.players, deck:G.deck, cur:G.cur, tile:G.tile, phase:G.phase, last:G.last, log:G.log, turnNo:G.turnNo,
+    lastScore:G.lastScore || null, endItems:G.endItems || null,
     board:[...G.board].map(([k,c]) => [k, c.t, c.r, c.m ? c.m.p : -1, c.m ? c.m.f : -1]),
   };
+}
+// 옛 저장을 지금 형식으로 바꾼다. 모르는 형식이면 null.
+function migrate(d){
+  if (!d || typeof d !== 'object' || d.v !== 1) return null;
+  let n = d.saveVersion || 1;
+  if (n > SAVE_VERSION) return null;
+  if (n === 1){ // v13까지: 실력·마지막 점수·끝 점수 내역이 없을 수 있음
+    (d.players || []).forEach(p => { if (p && !p.level) p.level = 'mid'; });
+    d.lastScore = d.lastScore || null; d.endItems = d.endItems || null;
+    n = 2;
+  }
+  d.saveVersion = n;
+  return d;
+}
+// 저장 내용이 게임으로 쓸 수 있는지 검사
+function validSave(d){
+  const int = (x, lo, hi) => Number.isInteger(x) && x >= lo && x <= hi, nT = TILES.length-1;
+  const ps = d.players;
+  if (!Array.isArray(ps) || !int(ps.length, 2, 5)) return false;
+  if (!ps.every(p => p && typeof p.name === 'string' && /^#[0-9a-f]{3,6}$/i.test(p.color) && Number.isFinite(p.score) && int(p.meeples, 0, 7))) return false;
+  if (!Array.isArray(d.deck) || !d.deck.every(t => int(t, 0, nT))) return false;
+  if (!int(d.cur, 0, ps.length-1) || !int(d.turnNo, 0, 999) || !['place','over'].includes(d.phase)) return false;
+  if (d.tile !== null && !int(d.tile, 0, nT)) return false;
+  if (!Array.isArray(d.log) || !d.log.every(l => l && int(l.p, 0, ps.length-1) && KIND[l.kind] && Number.isFinite(l.pts))) return false;
+  if (!Array.isArray(d.board) || !d.board.length) return false;
+  return d.board.every(b => Array.isArray(b) && /^-?\d+,-?\d+$/.test(b[0]) && int(b[1], 0, nT) && int(b[2], 0, 3)
+    && (b[3] === -1 || (int(b[3], 0, ps.length-1) && int(b[4], 0, TILES[b[1]].f.length-1))));
 }
 function fromSnapshot(d){
   d.board = new Map(d.board.map(([k,t,r,p,f]) => [k, {t, r, m: p >= 0 ? {p, f} : null}]));
   d.players.forEach(p => { if (!p.level) p.level = 'mid'; });
   return d;
 }
-function save(){
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({...snapshot(), undoCur:G.undoCur || null, undoPrev:G.undoPrev || null})); } catch(e){}
-}
-function loadSave(){
+// 글자로 된 저장 → 게임. 쓸 수 없으면 null.
+function parseSave(text){
   try {
-    const d = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (!d || d.v !== 1) return null;
-    return fromSnapshot(d);
+    const d = migrate(JSON.parse(text));
+    return d && validSave(d) ? fromSnapshot(d) : null;
+  } catch(e){ return null; }
+}
+let lastGood = null; // 방금까지 제대로 저장된 글자(다음 저장 때 직전 본이 된다)
+function save(){
+  try {
+    const text = JSON.stringify({...snapshot(), undoCur:G.undoCur || null, undoPrev:G.undoPrev || null});
+    if (lastGood === null){ const cur = localStorage.getItem(SAVE_KEY); if (cur && parseSave(cur)) lastGood = cur; }
+    if (lastGood) localStorage.setItem(PREV_KEY, lastGood);
+    localStorage.setItem(SAVE_KEY, text);
+    lastGood = text;
+  } catch(e){}
+}
+let recovered = false; // 직전 본으로 되찾았는지(이어하기 때 알려 준다)
+function loadSave(){
+  recovered = false;
+  try {
+    const cur = localStorage.getItem(SAVE_KEY);
+    if (!cur) return null;
+    const d = parseSave(cur);
+    if (d) return d;
+    const old = parseSave(localStorage.getItem(PREV_KEY));
+    recovered = !!old;
+    return old;
   } catch(e){ return null; }
 }
 function resume(d){
@@ -1064,6 +1160,7 @@ function resume(d){
   // 차례 시작 때 저장하므로, 뽑아 둔 타일을 다시 덱 위에 올리고 그 차례부터 다시 한다
   if (G.tile !== null) G.deck.push(G.tile);
   G.tile = null;
+  if (recovered){ recovered = false; toast('저장이 깨져서 바로 전 저장으로 이어요'); }
   startTurn();
 }
 
@@ -1534,11 +1631,17 @@ $('addSeat').onclick = () => {
 };
 $('startBtn').onclick = () => {
   // 브라우저 확인창(confirm)은 아이폰 홈 화면 앱·미리보기에서 안 뜨거나 바로 닫힐 수 있어 앱 안 화면으로 묻는다
-  if (gameInProgress()){ $('ask').hidden = false; return; }
+  if (gameInProgress()){ askUser('진행 중인 게임이 있어요', '새로 시작하면 지금 게임은 지워져요.', '새로 시작', startNew); return; }
   startNew();
 };
+let askGo = null;
+function askUser(title, text, yes, go){
+  $('askTitle').textContent = title; $('askText').textContent = text; $('askYes').textContent = yes;
+  askGo = go;
+  $('ask').hidden = false;
+}
 $('askNo').onclick = () => $('ask').hidden = true;
-$('askYes').onclick = () => { $('ask').hidden = true; startNew(); };
+$('askYes').onclick = () => { $('ask').hidden = true; if (askGo) askGo(); };
 function startNew(){
   seats.forEach((s,i) => { s.name = s.name.trim() || COLORS[i].n; });
   hideAll();
@@ -1559,19 +1662,23 @@ function openSetup(){
   renderSeats();
   hideAll(); $('setup').hidden = false;
 }
-function hideAll(){ ['home','setup','menu','rules','result','tiles','settings','logPage'].forEach(id => $(id).hidden = true); endReview(); }
+function hideAll(){ ['home','setup','menu','rules','result','tiles','settings','logPage','updates','ask'].forEach(id => $(id).hidden = true); endReview(); }
 
 // ───────── 첫 화면 ─────────
 function openHome(){
   hideAll();
-  $('resumeBtn').hidden = !gameInProgress();
-  $('homeNew').classList.toggle('primary', !gameInProgress());
+  const going = gameInProgress(), d = G || loadSave(), over = !!d && d.phase === 'over';
+  $('resumeBtn').hidden = !going && !over;
+  $('resumeBtn').textContent = going ? '이어하기' : '지난 결과 보기';
+  $('resumeBtn').classList.toggle('primary', going);
+  $('homeNew').classList.toggle('primary', !going);
   $('home').hidden = false;
   drawScene();
 }
 $('resumeBtn').onclick = () => {
   hideAll();
-  if (!G){ const d = loadSave(); if (d) resume(d); }
+  if (!G){ const d = loadSave(); if (d) resume(d); else openHome(); }
+  else if (G.phase === 'over') showResult();
   else { updateUI(); draw(); }
 };
 $('homeNew').onclick = openSetup;
@@ -1640,7 +1747,7 @@ function openSub(id, fromMenu){
   page.hidden = false;
   page.scrollTop = 0;
 }
-const SUBS = ['tiles','logPage','rules'];
+const SUBS = ['tiles','logPage','rules','updates'];
 document.querySelectorAll('.subBack').forEach(b => b.onclick = () => SUBS.forEach(id => $(id).hidden = true));
 document.querySelectorAll('.subDone').forEach(b => b.onclick = () => {
   SUBS.forEach(id => $(id).hidden = true);
@@ -1655,7 +1762,56 @@ $('mClose').onclick = () => $('menu').hidden = true;
 $('mHome').onclick = openHome;
 const openSettings = () => { $('settings').hidden = false; };
 $('homeSettings').onclick = openSettings;
-$('settingsClose').onclick = () => $('settings').hidden = true;
+$('settingsClose').onclick = () => { $('settings').hidden = true; openHome(); };
+// 백업: 저장된 게임을 파일 하나로 내보내고, 다시 불러온다
+const bkSay = msg => { $('bkMsg').textContent = msg; };
+function backupText(){
+  let cur = null;
+  try { cur = localStorage.getItem(SAVE_KEY); } catch(e){}
+  if (!cur || !parseSave(cur)) return null;
+  return JSON.stringify({app:'tile-road', kind:'backup', saveVersion:SAVE_VERSION, appVersion:APP_VERSION, save:JSON.parse(cur)});
+}
+async function backupSave(){
+  const text = backupText();
+  if (!text){ bkSay('저장된 게임이 없어요.'); return; }
+  const d = new Date(), two = n => String(n).padStart(2, '0');
+  const name = `tile-road-${d.getFullYear()}${two(d.getMonth()+1)}${two(d.getDate())}-${two(d.getHours())}${two(d.getMinutes())}.json`;
+  const file = new File([text], name, {type:'application/json'});
+  // 아이폰 홈 화면 앱은 내려받기가 막힐 수 있어 공유 창("파일에 저장")을 먼저 쓴다
+  if (navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file]}); bkSay('백업 파일을 내보냈어요.'); return; }
+    catch(e){ if (e.name === 'AbortError'){ bkSay('백업을 취소했어요.'); return; } }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  bkSay(`${name} 파일로 저장했어요.`);
+}
+// 성공하면 true. 지금 저장은 직전 본으로 남긴다.
+function backupRestore(text){
+  let o = null;
+  try { o = JSON.parse(text); } catch(e){}
+  const inner = o && o.app === 'tile-road' && o.save ? JSON.stringify(o.save) : null;
+  if (!inner || !parseSave(inner)) return false;
+  try {
+    const cur = localStorage.getItem(SAVE_KEY);
+    if (cur && parseSave(cur)) localStorage.setItem(PREV_KEY, cur);
+    localStorage.setItem(SAVE_KEY, inner);
+  } catch(e){ return false; }
+  lastGood = inner;
+  gen++; busy = false; pending = null; aiShow = null; anims = []; flashes = []; G = null;
+  return true;
+}
+$('bkSave').onclick = backupSave;
+$('bkLoad').onclick = () => { $('bkFile').value = ''; $('bkFile').click(); };
+$('bkFile').onchange = async () => {
+  const f = $('bkFile').files[0];
+  if (!f) return;
+  const text = await f.text().catch(() => '');
+  const go = () => bkSay(backupRestore(text) ? '백업을 불러왔어요. 닫고 첫 화면에서 이어서 하세요.' : '이 파일은 성과 길 백업이 아니거나 깨졌어요. 지금 게임은 그대로예요.');
+  if (gameInProgress()) askUser('진행 중인 게임이 있어요', '백업을 불러오면 지금 게임 대신 백업한 게임이 들어와요.', '불러오기', go);
+  else go();
+};
 $('mNew').onclick = openSetup;
 $('mRules').onclick = () => openSub('rules', true);
 function showLog(){
@@ -1694,6 +1850,7 @@ function resItems(pi, cat){
   return src.filter(e => e.p === pi && e.kind === cat.id);
 }
 function showResult(){
+  lockTaps();
   const ps = G.players.map((p,i) => ({...p, i})).sort((a,b) => b.score - a.score);
   const top = ps[0].score, winners = ps.filter(p => p.score === top);
   $('resTitle').textContent = winners.length > 1 ? '공동 우승' : `${winners[0].name} 우승`;
@@ -1754,14 +1911,17 @@ $('revBack').onclick = () => { endReview(); showResult(); };
 $('resBoard').onclick = () => { $('result').hidden = true; fitView(true); };
 $('resNew').onclick = openSetup;
 
-document.querySelectorAll('.ver').forEach(el => el.textContent = APP_VERSION);
+document.querySelectorAll('.ver').forEach(el => el.textContent = `${APP_VERSION} · ${UPDATES[0].d}`);
+$('updList').innerHTML = UPDATES.map(u => `<div class="upd"><b>${u.v}</b><small>${u.d}</small><ul>${u.t.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');
+$('mUpd').onclick = () => openSub('updates', true);
+$('setUpd').onclick = () => openSub('updates', false);
 // 화면을 돌리면 페이지가 밀려 있을 수 있어 맨 위로 되돌린다
 window.addEventListener('resize', resize);
 // 돌릴 때 억지로 스크롤을 되돌리지 않는다(되돌리는 순간 위쪽이 한 번 더 출렁임). 문서 자체가 움직이지 않게 html·body를 고정해 둠.
 window.addEventListener('orientationchange', () => setTimeout(resize, 350));
 // ───────── 시작: 언제나 첫 화면부터 ─────────
 openHome();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=' + APP_VERSION).catch(() => {});
 </script>
 </body>
 </html>
