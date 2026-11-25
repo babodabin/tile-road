@@ -382,9 +382,10 @@ table.res td.tot{font-weight:700;font-size:16px;color:var(--gold)}
 const SAVE_KEY = 'tileroad-save-v1';
 // 화면 판번호: "안 바뀐 것 같다"면 이것부터 본다. 바꿔 올릴 때마다 sw.js CACHE와 같이 올린다.
 // sw.js 캐시 이름은 등록 주소(sw.js?v=…)로 여기 값을 그대로 받는다. 올릴 때는 이 줄을 올리고 아래 UPDATES 맨 위에 한 줄 추가.
-const APP_VERSION = 'v14';
+const APP_VERSION = 'v15';
 // 업데이트 기록(앱 안에서 보임): 맨 위가 지금 버전
 const UPDATES = [
+  {v:'v15', d:'2026-11-25', t:['설정을 열거나 앱을 내리면 완전히 쉬어서 덜 뜨거움', '그리는 양을 줄임']},
   {v:'v14', d:'2026-11-25', t:['업데이트 기록 화면', '저장이 깨지면 바로 전 저장으로 되찾기', '"놓기"를 빨리 두 번 눌러도 일꾼 고르기를 건너뛰지 않음', '백업 파일 저장·불러오기', '껐다 켜도 마지막 점수와 지난 결과가 남음']},
   {v:'v13', d:'2026-11-24', t:['설정을 열면 컴퓨터도 정말 멈춤', '마지막 점수가 잘리지 않음', '가로 화면에서 판을 넓게']},
   {v:'v12', d:'2026-11-13', t:['최상 컴퓨터가 훨씬 세짐', '생각하는 동안 화면이 멈추지 않음', '일꾼 자리 동그라미 크게']},
@@ -967,10 +968,15 @@ function aiDeep(cb){
   const pi = G.cur, t = G.tile, my = gen;
   const moves = aiHard('all').slice(0, AIP.dK);
   if (moves.length < 2 || !G.deck.length){ cb(moves[0]); return; }
-  const sums = moves.map(() => 0), t0 = performance.now();
-  let n = 0;
+  const sums = moves.map(() => 0);
+  let n = 0, t0 = performance.now();
   const step = () => {
     if (my !== gen) return;
+    if (paused()){ // 멈춘 시간은 생각 시간에서 뺀다
+      const at = performance.now();
+      waiting.push(() => { t0 += performance.now() - at; step(); });
+      return;
+    }
     const until = performance.now() + 24;
     do {
       const order = G.deck.slice();
@@ -1031,7 +1037,7 @@ function runAI(){
   const fast = prefs.speed === 'fast', my = gen;
   const later = (ms, fn) => setTimeout(() => {
     if (my !== gen) return;
-    if (paused()){ later(250, fn); return; }
+    if (paused()){ waiting.push(() => later(0, fn)); return; }
     fn();
   }, ms);
   const T = fast ? {think:60, pan:0, tile:300, meeple:0} : {think:350, pan:450, tile:1000, meeple:850};
@@ -1060,7 +1066,21 @@ function runAI(){
 }
 // 게임을 덮는 화면이 열려 있으면 컴퓨터는 기다린다
 const PAUSERS = ['home','setup','menu','tiles','logPage','rules','settings','updates','ask'];
-function paused(){ return PAUSERS.some(id => $(id).hidden === false); }
+function paused(){ return document.visibilityState === 'hidden' || PAUSERS.some(id => $(id).hidden === false); }
+// 멈춘 동안은 타이머도 그리기도 없이 쉰다. 하던 일은 waiting에 두었다가 다시 보일 때 이어 한다.
+let waiting = [];
+function wake(){
+  if (paused()) return;
+  const w = waiting;
+  waiting = [];
+  w.forEach(f => f());
+  draw();
+}
+document.addEventListener('visibilitychange', wake);
+if (typeof MutationObserver !== 'undefined'){
+  const mo = new MutationObserver(wake);
+  document.querySelectorAll('.overlay').forEach(o => mo.observe(o, {attributes:true, attributeFilter:['hidden']}));
+}
 // 화면을 그 칸으로 부드럽게 옮긴다(이미 잘 보이면 그대로)
 function panTo(x, y, ms, cb){
   const [sx,sy] = toScreen(x,y), m = cam.z*0.9;
@@ -1263,7 +1283,7 @@ let raf = 0, needFit = true;
 // 캔버스 크기를 실제 화면 크기에 맞춘다. 바뀌었으면 true.
 function syncSize(){
   const r = cv.getBoundingClientRect();
-  const nd = Math.min(window.devicePixelRatio || 1, 3);
+  const nd = Math.min(window.devicePixelRatio || 1, 2);
   if (!r.width || !r.height) return false;
   if (r.width === W && r.height === H && nd === dpr) return false;
   dpr = nd; W = r.width; H = r.height;
@@ -1420,7 +1440,7 @@ function render(){
     ctx.strokeText(a.text, sx, sy - k*40); ctx.fillStyle = a.color === '#2b2b2b' ? '#f3e9d2' : a.color; ctx.fillText(a.text, sx, sy - k*40);
     ctx.globalAlpha = 1;
   }
-  if (anims.length || flashes.length || busyAnim) draw();
+  if ((anims.length || flashes.length || busyAnim) && !paused() && $('result').hidden !== false) draw(); // 덮이거나 숨으면 그만 그린다(다시 보이면 wake가 이어 그림)
 }
 function floatText(at, text, color){ anims.push({at, text, color, t0:performance.now()}); draw(); }
 function flashRegion(keys, color){ if (keys) { flashes.push({keys, color, t0:performance.now()}); draw(); } }
